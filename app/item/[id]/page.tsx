@@ -5,7 +5,6 @@ import { useParams } from 'next/navigation'
 import { createClient } from '@supabase/supabase-js'
 import Image from 'next/image'
 import BidForm from '@/app/components/BidForm'
-import CheckoutForm from '@/app/components/CheckoutForm'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -25,7 +24,6 @@ interface Item {
 
 interface Bid {
   id: string
-  bidder_name: string
   bid_amount: number
   created_at: string
 }
@@ -118,8 +116,9 @@ export default function ItemPage() {
 
   const isAuction = item.type === 'auction'
   const endDate = isAuction && item.auction_end_date ? new Date(item.auction_end_date) : null
-  const isEnded = endDate ? endDate < new Date() : false
+  const isEnded = endDate ? endDate < new Date() : item.status === 'ended'
   const highestBid = bids[0]?.bid_amount || item.starting_price
+  const bidCount = bids.length
 
   return (
     <main className="min-h-screen bg-background">
@@ -173,6 +172,9 @@ export default function ItemPage() {
                       <div className="text-3xl font-bold text-foreground">
                         ${highestBid?.toFixed(2)}
                       </div>
+                      <div className="text-xs text-muted-foreground mt-2">
+                        {bidCount} bid{bidCount !== 1 ? 's' : ''} placed
+                      </div>
                     </div>
                     {endDate && (
                       <div className="text-sm">
@@ -194,15 +196,16 @@ export default function ItemPage() {
             </div>
 
             {/* Forms */}
-            {isAuction && !isEnded ? (
-              <BidForm itemId={id} onBidPlaced={fetchItem} />
-            ) : !isAuction ? (
-              <CheckoutForm itemId={id} />
-            ) : (
-              <div className="bg-secondary text-foreground p-4 rounded-lg text-center">
-                <p className="font-semibold">This auction has ended</p>
-              </div>
-            )}
+            {isAuction ? (
+              !isEnded ? (
+                <BidForm itemId={id} onBidPlaced={fetchItem} />
+              ) : (
+                <div className="bg-secondary text-foreground p-4 rounded-lg text-center border border-border">
+                  <p className="font-semibold mb-1">This auction has ended</p>
+                  <p className="text-sm text-muted-foreground">Winners will be contacted via Messenger</p>
+                </div>
+              )
+            ) : null}
           </div>
         </div>
 
@@ -214,20 +217,18 @@ export default function ItemPage() {
               <div className="divide-y divide-border">
                 {bids.map((bid, index) => (
                   <div key={bid.id} className="p-4 flex items-center justify-between">
-                    <div>
-                      <div className="font-semibold text-foreground">
-                        {bid.bidder_name}
-                      </div>
-                      <div className="text-sm text-muted-foreground">
-                        {new Date(bid.created_at).toLocaleDateString()}
-                      </div>
+                    <div className="text-sm text-muted-foreground">
+                      Bid #{bids.length - index}
                     </div>
                     <div className="text-right">
                       <div className="text-xl font-bold text-foreground">
                         ${bid.bid_amount.toFixed(2)}
                       </div>
+                      <div className="text-xs text-muted-foreground">
+                        {new Date(bid.created_at).toLocaleDateString()}
+                      </div>
                       {index === 0 && (
-                        <span className="text-xs text-primary font-semibold">Highest</span>
+                        <span className="text-xs text-primary font-semibold block mt-1">Highest</span>
                       )}
                     </div>
                   </div>

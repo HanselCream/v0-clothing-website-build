@@ -1,8 +1,8 @@
 import { createClient } from '@supabase/supabase-js'
 import { NextRequest, NextResponse } from 'next/server'
-import Stripe from 'stripe'
+import { Resend } from 'resend'
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!)
+const resend = new Resend(process.env.RESEND_API_KEY)
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -49,71 +49,70 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    // Get highest bid
-    const { data: highestBid } = await supabase
+    // Get top 3 unique bids by email
+    const { data: allBids } = await supabase
       .from('bids')
       .select('*')
       .eq('item_id', item_id)
-      .order('bid_amount', { ascending: false })
-      .limit(1)
-      .single()
+      .order('amount', { ascending: false })
 
-    if (!highestBid) {
+    if (!allBids || allBids.length === 0) {
       return NextResponse.json(
         { error: 'No bids placed on this auction' },
         { status: 400 }
       )
     }
 
-    // Create payment link using Stripe
-    const paymentLink = await stripe.paymentLinks.create({
-      line_items: [
-        {
-          price_data: {
-            currency: 'usd',
-            product_data: {
-              name: `${item.title} (Auction Winner)`,
-              description: `Final winning bid for auction item`,
-            },
-            unit_amount: Math.round(highestBid.bid_amount * 100),
-          },
-          quantity: 1,
-        },
-      ],
-      after_completion: {
-        type: 'redirect',
-        redirect: {
-          url: `${process.env.NEXT_PUBLIC_BASE_URL}/success?item_id=${item_id}`,
-        },
-      },
+    // Get top 3 unique bidders (by email)
+    const uniqueBidders = new Map<string, typeof allBids[0]>()
+    allBids.forEach(bid => {
+      if (!uniqueBidders.has(bid.bidder_email)) {
+        uniqueBidders.set(bid.bidder_email, bid)
+      }
     })
 
-    // Create order record for the auction winner
-    await supabase.from('orders').insert([
-      {
-        item_id,
-        customer_name: highestBid.bidder_name,
-        customer_email: highestBid.bidder_email,
-        total_price: highestBid.bid_amount,
-        stripe_payment_link: paymentLink.url,
-        created_at: new Date().toISOString(),
-      },
-    ])
+    const topThree = Array.from(uniqueBidders.values())
+      .sort((a, b) => b.amount - a.amount)
+      .slice(0, 3)
 
-    // Update item to mark auction as ended
+    // Create Olympic podium result
+    const podium = topThree.map((bid, index) => ({
+      rank: index + 1,
+      bidder_email: bid.bidder_email,
+      amount: bid.amount,
+    }))
+
+    // Send email to admin
+    if (process.env.ADMIN_EMAIL) {
+      const emailBody = `
+Auction Ended: ${item.title}
+
+Top 3 Winners:
+
+1st Place (Gold) - ${podium[0]?.bidder_email} - $${podium[0]?.amount.toFixed(2)}
+${podium[1] ? `2nd Place (Silver) - ${podium[1].bidder_email} - $${podium[1].amount.toFixed(2)}` : ''}
+${podium[2] ? `3rd Place (Bronze) - ${podium[2].bidder_email} - $${podium[2].amount.toFixed(2)}` : ''}
+
+Contact winners via Facebook Messenger to arrange payment.
+      `
+
+      await resend.emails.send({
+        from: 'noreply@resend.dev',
+        to: process.env.ADMIN_EMAIL,
+        subject: `Auction Ended — ${item.title}`,
+        text: emailBody,
+      })
+    }
+
+    // Mark item status as ended
     await supabase
       .from('items')
-      .update({ auction_ended: true })
+      .update({ status: 'ended' })
       .eq('id', item_id)
 
     return NextResponse.json({
       success: true,
-      paymentLink: paymentLink.url,
-      winner: {
-        name: highestBid.bidder_name,
-        email: highestBid.bidder_email,
-        bid: highestBid.bid_amount,
-      },
+      podium,
     })
   } catch (error) {
     console.error('End auction error:', error)
