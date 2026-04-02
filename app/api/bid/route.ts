@@ -1,24 +1,41 @@
-import { createClient } from '@supabase/supabase-js'
+import { supabaseAdmin as supabase } from '@/lib/supabase'
 import { NextRequest, NextResponse } from 'next/server'
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-)
 
 export async function POST(req: NextRequest) {
   try {
-    const { item_id, bidder_name, bidder_email, bid_amount } = await req.json()
+    const {
+      item_id,
+      name,
+      address,
+      phone,
+      email,
+      amount,
+    } = await req.json()
 
     // Validate input
-    if (!item_id || !bidder_name || !bidder_email || !bid_amount) {
+    if (!item_id || !name || !address || !phone || !email || !amount) {
       return NextResponse.json(
         { error: 'Missing required fields' },
         { status: 400 }
       )
     }
 
-    // Fetch the item to check if it's an auction and validate bid
+    // Check if user has already bid on this item
+    const { data: existingBid } = await supabase
+      .from('bids')
+      .select('*')
+      .eq('item_id', item_id)
+      .eq('bidder_email', email)
+      .single()
+
+    if (existingBid) {
+      return NextResponse.json(
+        { error: 'You have already bid on this item' },
+        { status: 400 }
+      )
+    }
+
+    // Fetch the item to validate bid amount
     const { data: item, error: itemError } = await supabase
       .from('items')
       .select('*')
@@ -32,62 +49,53 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    if (item.type !== 'auction') {
-      return NextResponse.json(
-        { error: 'Item is not an auction' },
-        { status: 400 }
-      )
-    }
+    // Check bid amount exceeds current highest bid
+    const minimumBid =
+      item.current_bid > 0
+        ? item.current_bid + 100
+        : (item.starting_price || 100) + 100
 
-    // Check if auction is still active
-    const now = new Date()
-    if (new Date(item.auction_end_date) < now) {
+    if (amount <= item.current_bid) {
       return NextResponse.json(
-        { error: 'Auction has ended' },
-        { status: 400 }
-      )
-    }
-
-    // Check if bid is higher than current highest bid
-    const { data: highestBid } = await supabase
-      .from('bids')
-      .select('bid_amount')
-      .eq('item_id', item_id)
-      .order('bid_amount', { ascending: false })
-      .limit(1)
-      .single()
-
-    const minimumBid = highestBid?.bid_amount ? highestBid.bid_amount + 1 : item.starting_price
-    if (bid_amount < minimumBid) {
-      return NextResponse.json(
-        { error: `Bid must be at least $${minimumBid}` },
+        { error: 'Bid must exceed current highest bid' },
         { status: 400 }
       )
     }
 
     // Insert the bid
-    const { data: bid, error: bidError } = await supabase
-      .from('bids')
-      .insert([
-        {
-          item_id,
-          bidder_name,
-          bidder_email,
-          bid_amount,
-          created_at: new Date().toISOString(),
-        },
-      ])
-      .select()
-      .single()
+    const { error: bidError } = await supabase.from('bids').insert([
+      {
+        item_id,
+        bidder_name: name,
+        bidder_address: address,
+        bidder_phone: phone,
+        bidder_email: email,
+        amount,
+      },
+    ])
 
     if (bidError) {
+      console.error('Bid insert error:', bidError)
       return NextResponse.json(
         { error: 'Failed to place bid' },
         { status: 500 }
       )
     }
 
-    return NextResponse.json({ success: true, bid })
+    // Update item current_bid and bid_count
+    const { error: updateError } = await supabase
+      .from('items')
+      .update({
+        current_bid: amount,
+        bid_count: (item.bid_count || 0) + 1,
+      })
+      .eq('id', item_id)
+
+    if (updateError) {
+      console.error('Item update error:', updateError)
+    }
+
+    return NextResponse.json({ success: true, amount })
   } catch (error) {
     console.error('Bid error:', error)
     return NextResponse.json(

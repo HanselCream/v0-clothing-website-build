@@ -1,13 +1,8 @@
-import { createClient } from '@supabase/supabase-js'
+import { supabaseAdmin as supabase } from '@/lib/supabase'
 import { NextRequest, NextResponse } from 'next/server'
 import { Resend } from 'resend'
 
 const resend = new Resend(process.env.RESEND_API_KEY)
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-)
 
 export async function POST(req: NextRequest) {
   try {
@@ -75,10 +70,13 @@ export async function POST(req: NextRequest) {
       .sort((a, b) => b.amount - a.amount)
       .slice(0, 3)
 
-    // Create Olympic podium result
+    // Create Olympic podium result with full details
     const podium = topThree.map((bid, index) => ({
       rank: index + 1,
+      bidder_name: bid.bidder_name,
       bidder_email: bid.bidder_email,
+      bidder_phone: bid.bidder_phone,
+      bidder_address: bid.bidder_address,
       amount: bid.amount,
     }))
 
@@ -87,12 +85,29 @@ export async function POST(req: NextRequest) {
       const emailBody = `
 Auction Ended: ${item.title}
 
-Top 3 Winners:
+🥇 1st Place (Gold)
+Name: ${podium[0]?.bidder_name}
+Email: ${podium[0]?.bidder_email}
+Phone: ${podium[0]?.bidder_phone}
+Address: ${podium[0]?.bidder_address}
+Amount: ₱${podium[0]?.amount.toLocaleString()}
 
-1st Place (Gold) - ${podium[0]?.bidder_email} - $${podium[0]?.amount.toFixed(2)}
-${podium[1] ? `2nd Place (Silver) - ${podium[1].bidder_email} - $${podium[1].amount.toFixed(2)}` : ''}
-${podium[2] ? `3rd Place (Bronze) - ${podium[2].bidder_email} - $${podium[2].amount.toFixed(2)}` : ''}
+${podium[1] ? `🥈 2nd Place (Silver)
+Name: ${podium[1].bidder_name}
+Email: ${podium[1].bidder_email}
+Phone: ${podium[1].bidder_phone}
+Address: ${podium[1].bidder_address}
+Amount: ₱${podium[1].amount.toLocaleString()}
 
+` : ''}
+${podium[2] ? `🥉 3rd Place (Bronze)
+Name: ${podium[2].bidder_name}
+Email: ${podium[2].bidder_email}
+Phone: ${podium[2].bidder_phone}
+Address: ${podium[2].bidder_address}
+Amount: ₱${podium[2].amount.toLocaleString()}
+
+` : ''}
 Contact winners via Facebook Messenger to arrange payment.
       `
 

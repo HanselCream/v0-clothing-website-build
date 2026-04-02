@@ -9,6 +9,8 @@ CREATE TABLE items (
   status TEXT NOT NULL DEFAULT 'active' CHECK (status IN ('active', 'inactive', 'ended')),
   image_url TEXT,
   auction_end_date TIMESTAMP WITH TIME ZONE,
+  current_bid DECIMAL(10, 2) DEFAULT 0,
+  bid_count INTEGER DEFAULT 0,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT now()
 );
@@ -17,9 +19,13 @@ CREATE TABLE items (
 CREATE TABLE bids (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   item_id UUID NOT NULL REFERENCES items(id) ON DELETE CASCADE,
+  bidder_name TEXT NOT NULL,
+  bidder_address TEXT NOT NULL,
+  bidder_phone TEXT NOT NULL,
   bidder_email TEXT NOT NULL,
   amount DECIMAL(10, 2) NOT NULL,
-  placed_at TIMESTAMP WITH TIME ZONE DEFAULT now()
+  placed_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
+  UNIQUE(item_id, bidder_email)
 );
 
 -- Create indexes for performance

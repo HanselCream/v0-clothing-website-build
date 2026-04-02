@@ -14,13 +14,19 @@ interface Item {
 interface Bid {
   id: string
   item_id: string
+  bidder_name: string
   bidder_email: string
+  bidder_phone: string
+  bidder_address: string
   amount: number
 }
 
 interface PodiumResult {
   rank: number
+  bidder_name: string
   bidder_email: string
+  bidder_phone: string
+  bidder_address: string
   amount: number
 }
 
@@ -180,21 +186,20 @@ export default function AdminAuctionTab({
                       {podium.map((result) => (
                         <div
                           key={result.rank}
-                          className="p-3 rounded-lg"
+                          className="p-3 rounded-lg text-xs space-y-1"
                           style={{ backgroundColor: getPodiumColor(result.rank) + '20', borderLeft: `4px solid ${getPodiumColor(result.rank)}` }}
                         >
-                          <div className="flex items-center justify-between">
-                            <div>
-                              <div className="font-semibold text-foreground">
-                                {getPodiumLabel(result.rank)}
-                              </div>
-                              <div className="text-sm text-muted-foreground">
-                                {result.bidder_email}
-                              </div>
-                            </div>
-                            <div className="text-right font-bold text-foreground text-lg">
-                              ${result.amount.toFixed(2)}
-                            </div>
+                          <div className="font-semibold text-foreground">
+                            {getPodiumLabel(result.rank)}
+                          </div>
+                          <div className="text-muted-foreground">
+                            <div><span className="font-semibold">Name:</span> {result.bidder_name}</div>
+                            <div><span className="font-semibold">Email:</span> {result.bidder_email}</div>
+                            <div><span className="font-semibold">Phone:</span> {result.bidder_phone}</div>
+                            <div><span className="font-semibold">Address:</span> {result.bidder_address}</div>
+                          </div>
+                          <div className="font-bold text-foreground text-sm">
+                            Amount: ₱{result.amount.toLocaleString()}
                           </div>
                         </div>
                       ))}
@@ -216,10 +221,10 @@ export default function AdminAuctionTab({
                             className="flex justify-between text-sm"
                           >
                             <div className="text-muted-foreground text-xs">
-                              {bid.bidder_email}
+                              {bid.bidder_name}
                             </div>
                             <div className="font-semibold text-foreground">
-                              ${bid.amount.toFixed(2)}
+                              ₱{bid.amount.toLocaleString()}
                             </div>
                           </div>
                         ))}

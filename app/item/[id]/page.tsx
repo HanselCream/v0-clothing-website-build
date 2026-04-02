@@ -2,14 +2,10 @@
 
 import { useEffect, useState, useCallback } from 'react'
 import { useParams } from 'next/navigation'
-import { createClient } from '@supabase/supabase-js'
+import { supabase } from '@/lib/supabase'
 import Image from 'next/image'
-import BidForm from '@/app/components/BidForm'
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-)
+import BidRegistrationForm from '@/app/components/BidRegistrationForm'
+import BidSliderInput from '@/app/components/BidSliderInput'
 
 interface Item {
   id: string
@@ -20,12 +16,22 @@ interface Item {
   image_url: string
   auction_end_date?: string
   starting_price?: number
+  current_bid: number
+  bid_count: number
+  status: string
 }
 
 interface Bid {
   id: string
-  bid_amount: number
+  amount: number
   created_at: string
+}
+
+interface BidderInfo {
+  name: string
+  address: string
+  phone: string
+  email: string
 }
 
 export default function ItemPage() {
@@ -36,6 +42,12 @@ export default function ItemPage() {
   const [bids, setBids] = useState<Bid[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const [bidderInfo, setBidderInfo] = useState<BidderInfo | null>(null)
+  const [hasBidAlready, setHasBidAlready] = useState(false)
+  const [existingBidAmount, setExistingBidAmount] = useState<number | null>(null)
+  const [bidSubmitting, setBidSubmitting] = useState(false)
+  const [bidError, setBidError] = useState('')
+  const [bidSuccess, setBidSuccess] = useState(false)
 
   const fetchItem = useCallback(async () => {
     const { data, error: itemError } = await supabase
@@ -56,10 +68,27 @@ export default function ItemPage() {
         .from('bids')
         .select('*')
         .eq('item_id', id)
-        .order('bid_amount', { ascending: false })
+        .order('amount', { ascending: false })
 
       if (bidsData) {
         setBids(bidsData)
+      }
+
+      // Check if user is already registered in localStorage
+      const storedBidderInfo = localStorage.getItem('bidder_info')
+      if (storedBidderInfo) {
+        const bidderData = JSON.parse(storedBidderInfo)
+        setBidderInfo(bidderData)
+
+        // Check if user has already bid on this item
+        const response = await fetch(
+          `/api/check-bid?item_id=${id}&email=${encodeURIComponent(bidderData.email)}`
+        )
+        const result = await response.json()
+        setHasBidAlready(result.has_bid)
+        if (result.amount) {
+          setExistingBidAmount(result.amount)
+        }
       }
     }
 
@@ -68,7 +97,9 @@ export default function ItemPage() {
 
   useEffect(() => {
     fetchItem()
+  }, [id, fetchItem])
 
+  useEffect(() => {
     // Subscribe to bid changes for auctions
     if (item?.type === 'auction') {
       const subscription = supabase
@@ -83,7 +114,8 @@ export default function ItemPage() {
           },
           (payload) => {
             const newBid = payload.new as Bid
-            setBids(prev => [newBid, ...prev].sort((a, b) => b.bid_amount - a.bid_amount))
+            setBids(prev => [newBid, ...prev].sort((a, b) => b.amount - a.amount))
+            setItem(prev => prev ? { ...prev, bid_count: (prev.bid_count || 0) + 1 } : null)
           }
         )
         .subscribe()
@@ -92,7 +124,7 @@ export default function ItemPage() {
         subscription.unsubscribe()
       }
     }
-  }, [id, item?.type, fetchItem])
+  }, [id, item?.type])
 
   if (loading) {
     return (
@@ -104,11 +136,62 @@ export default function ItemPage() {
     )
   }
 
+  const handleRegister = (info: BidderInfo) => {
+    localStorage.setItem('bidder_info', JSON.stringify(info))
+    setBidderInfo(info)
+    setBidError('')
+  }
+
+  const handleBidSubmit = async (amount: number) => {
+    if (!bidderInfo || !item) return
+
+    setBidSubmitting(true)
+    setBidError('')
+
+    try {
+      const response = await fetch('/api/bid', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          item_id: item.id,
+          name: bidderInfo.name,
+          address: bidderInfo.address,
+          phone: bidderInfo.phone,
+          email: bidderInfo.email,
+          amount,
+        }),
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to place bid')
+      }
+
+      // Save to localStorage
+      localStorage.setItem(
+        `bid_${item.id}`,
+        JSON.stringify({ amount, placed_at: new Date().toISOString() })
+      )
+
+      setBidSuccess(true)
+      setHasBidAlready(true)
+      setExistingBidAmount(amount)
+      fetchItem()
+
+      setTimeout(() => setBidSuccess(false), 5000)
+    } catch (err: any) {
+      setBidError(err.message)
+    } finally {
+      setBidSubmitting(false)
+    }
+  }
+
   if (error || !item) {
     return (
       <main className="min-h-screen bg-background">
         <div className="container mx-auto px-4 py-8">
-          <div className="text-red-500">{error || 'Item not found'}</div>
+          <div className="text-destructive">{error || 'Item not found'}</div>
         </div>
       </main>
     )
@@ -117,14 +200,14 @@ export default function ItemPage() {
   const isAuction = item.type === 'auction'
   const endDate = isAuction && item.auction_end_date ? new Date(item.auction_end_date) : null
   const isEnded = endDate ? endDate < new Date() : item.status === 'ended'
-  const highestBid = bids[0]?.bid_amount || item.starting_price
-  const bidCount = bids.length
+  const highestBid = item.current_bid || item.starting_price || 0
+  const bidCount = item.bid_count || 0
 
   return (
     <main className="min-h-screen bg-background">
       <div className="container mx-auto px-4 py-8">
-        <a href="/" className="text-muted-foreground hover:text-foreground mb-6 inline-block">
-          ← Back to items
+        <a href={isAuction ? '/auctions' : '/'} className="text-muted-foreground hover:text-foreground mb-6 inline-block">
+          ← Back to {isAuction ? 'auctions' : 'items'}
         </a>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -170,7 +253,7 @@ export default function ItemPage() {
                     <div className="mb-4">
                       <div className="text-sm text-muted-foreground mb-1">Current highest bid</div>
                       <div className="text-3xl font-bold text-foreground">
-                        ${highestBid?.toFixed(2)}
+                        ₱{highestBid.toLocaleString()}
                       </div>
                       <div className="text-xs text-muted-foreground mt-2">
                         {bidCount} bid{bidCount !== 1 ? 's' : ''} placed
@@ -178,7 +261,7 @@ export default function ItemPage() {
                     </div>
                     {endDate && (
                       <div className="text-sm">
-                        <span className={isEnded ? 'text-red-500 font-semibold' : 'text-muted-foreground'}>
+                        <span className={isEnded ? 'text-destructive font-semibold' : 'text-muted-foreground'}>
                           {isEnded ? 'Auction ended' : `Ends: ${endDate.toLocaleDateString()} at ${endDate.toLocaleTimeString()}`}
                         </span>
                       </div>
@@ -188,24 +271,61 @@ export default function ItemPage() {
                   <>
                     <div className="text-sm text-muted-foreground mb-1">Price</div>
                     <div className="text-3xl font-bold text-foreground">
-                      ${item.price?.toFixed(2)}
+                      ₱{item.price?.toLocaleString()}
                     </div>
                   </>
                 )}
               </div>
             </div>
 
-            {/* Forms */}
-            {isAuction ? (
-              !isEnded ? (
-                <BidForm itemId={id} onBidPlaced={fetchItem} />
-              ) : (
-                <div className="bg-secondary text-foreground p-4 rounded-lg text-center border border-border">
-                  <p className="font-semibold mb-1">This auction has ended</p>
-                  <p className="text-sm text-muted-foreground">Winners will be contacted via Messenger</p>
-                </div>
-              )
-            ) : null}
+            {/* Bid Section */}
+            {isAuction && (
+              <div className="space-y-4">
+                {!isEnded ? (
+                  <>
+                    {bidSuccess && (
+                      <div className="bg-green-900 text-green-100 p-4 rounded-lg">
+                        <p className="font-semibold">
+                          Bid of ₱{existingBidAmount?.toLocaleString()} placed successfully.
+                        </p>
+                        <p className="text-sm mt-1">
+                          If you win, Jopesh will contact you via Messenger.
+                        </p>
+                      </div>
+                    )}
+
+                    {!bidderInfo ? (
+                      <BidRegistrationForm onRegister={handleRegister} />
+                    ) : (
+                      <>
+                        {bidError && (
+                          <div className="bg-red-900 text-red-100 p-4 rounded-lg">
+                            <p className="text-sm">{bidError}</p>
+                          </div>
+                        )}
+                        <BidSliderInput
+                          currentBid={highestBid}
+                          startingPrice={item.starting_price || 100}
+                          onBidSubmit={handleBidSubmit}
+                          isLoading={bidSubmitting}
+                          hasBidAlready={hasBidAlready}
+                          existingBidAmount={existingBidAmount || undefined}
+                        />
+                      </>
+                    )}
+                  </>
+                ) : (
+                  <div className="bg-card border border-border rounded-lg p-6 text-center">
+                    <p className="text-foreground font-semibold mb-1">
+                      This auction has ended
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      Winners will be contacted via Messenger
+                    </p>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </div>
 
@@ -222,7 +342,7 @@ export default function ItemPage() {
                     </div>
                     <div className="text-right">
                       <div className="text-xl font-bold text-foreground">
-                        ${bid.bid_amount.toFixed(2)}
+                        ₱{bid.amount.toLocaleString()}
                       </div>
                       <div className="text-xs text-muted-foreground">
                         {new Date(bid.created_at).toLocaleDateString()}
