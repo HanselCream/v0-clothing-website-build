@@ -1,3 +1,4 @@
+// app/admin/page.tsx
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
@@ -13,7 +14,7 @@ interface Item {
   auction_end_date?: string
   price?: number
   starting_price?: number
-  auction_ended?: boolean
+  status?: string
 }
 
 interface Bid {
@@ -21,7 +22,9 @@ interface Bid {
   item_id: string
   bidder_name: string
   bidder_email: string
-  bid_amount: number
+  bidder_phone: string
+  bidder_address: string
+  amount: number
 }
 
 export default function AdminPage() {
@@ -49,42 +52,6 @@ export default function AdminPage() {
   useEffect(() => {
     if (isAuthenticated) {
       fetchData()
-
-      // Subscribe to real-time updates
-      const itemsSubscription = supabase
-        .channel('items-changes')
-        .on(
-          'postgres_changes',
-          {
-            event: '*',
-            schema: 'public',
-            table: 'items',
-          },
-          () => {
-            fetchData()
-          }
-        )
-        .subscribe()
-
-      const bidsSubscription = supabase
-        .channel('bids-changes')
-        .on(
-          'postgres_changes',
-          {
-            event: 'INSERT',
-            schema: 'public',
-            table: 'bids',
-          },
-          () => {
-            fetchData()
-          }
-        )
-        .subscribe()
-
-      return () => {
-        itemsSubscription.unsubscribe()
-        bidsSubscription.unsubscribe()
-      }
     }
   }, [isAuthenticated, fetchData])
 

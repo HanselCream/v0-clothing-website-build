@@ -1,3 +1,4 @@
+// app/components/AdminAuctionTab.tsx
 'use client'
 
 import { useState } from 'react'
@@ -88,9 +89,9 @@ export default function AdminAuctionTab({
 
   const getPodiumColor = (rank: number) => {
     switch(rank) {
-      case 1: return '#FFD700' // Gold
-      case 2: return '#C0C0C0' // Silver
-      case 3: return '#CD7F32' // Bronze
+      case 1: return '#FFD700'
+      case 2: return '#C0C0C0'
+      case 3: return '#CD7F32'
       default: return '#ffffff'
     }
   }
@@ -120,7 +121,7 @@ export default function AdminAuctionTab({
 
       {items.length === 0 ? (
         <div className="text-center py-12 text-muted-foreground">
-          No auctions
+          No active auctions
         </div>
       ) : (
         <div className="space-y-4">
@@ -152,12 +153,12 @@ export default function AdminAuctionTab({
                       {item.title}
                     </h3>
                     <p className="text-sm text-muted-foreground mt-1">
-                      Starting: ${item.starting_price?.toFixed(2)}
+                      Starting: ₱{item.starting_price?.toLocaleString()}
                     </p>
                   </div>
                   <div className="text-right">
                     <div className="text-2xl font-bold text-foreground">
-                      ${highestBid?.amount.toFixed(2) || item.starting_price?.toFixed(2)}
+                      ₱{highestBid?.amount.toLocaleString() || item.starting_price?.toLocaleString()}
                     </div>
                     <div
                       className={`text-sm font-semibold mt-1 ${
@@ -205,7 +206,7 @@ export default function AdminAuctionTab({
                       ))}
                     </div>
                     <p className="text-xs text-muted-foreground mt-4">
-                      Winners contacted via Messenger
+                      Winners will be contacted via Messenger
                     </p>
                   </div>
                 ) : (
