@@ -42,27 +42,109 @@ function AuthModal({ onLogin }: { onLogin: (credentials: UserCredentials) => voi
   const [loginEmail, setLoginEmail] = useState('')
   const [error, setError] = useState('')
 
-  const handleSignup = (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!formData.nickname.trim()) { setError('Nickname is required'); return }
-    if (!formData.email.trim() || !formData.email.includes('@')) { setError('Valid email address is required'); return }
-    if (!formData.location.trim()) { setError('Location is required'); return }
-    if (!formData.facebookName.trim()) { setError('Facebook name is required'); return }
-    if (!formData.phoneNumber.trim()) { setError('Phone number is required'); return }
-    localStorage.setItem('user_credentials', JSON.stringify(formData))
-    onLogin(formData)
+const handleSignup = async (e: React.FormEvent) => {
+  e.preventDefault()
+
+if (!formData.nickname.trim() || formData.nickname.trim().length < 3) {
+  setError('Nickname must be at least 3 characters')
+  return
+}
+
+const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+if (!emailRegex.test(formData.email.trim())) {
+  setError('Please enter a valid email address')
+  return
+}
+
+if (!formData.location.trim() || formData.location.trim().length < 3) {
+  setError('Please enter a valid location')
+  return
+}
+
+if (!formData.facebookName.trim() || formData.facebookName.trim().length < 3) {
+  setError('Please enter your Facebook name')
+  return
+}
+
+const phoneRegex = /^(09|\+639)\d{9}$/
+if (!phoneRegex.test(formData.phoneNumber.trim())) {
+  setError('Enter a valid PH number: 09XXXXXXXXX or +639XXXXXXXXX')
+  return
+}
+
+  // Check if email already exists in Supabase
+  const { data: existing } = await supabase
+    .from('users')
+    .select('email')
+    .eq('email', formData.email)
+    .single()
+
+  if (existing) {
+    setError('This email is already registered. Please login instead.')
+    setIsSignup(false)       // auto-switch to Login tab
+    setLoginEmail(formData.email) // pre-fill their email
+    return
   }
 
-  const handleLogin = (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!loginEmail.trim() || !loginEmail.includes('@')) { setError('Valid email address is required'); return }
-    const storedUser = localStorage.getItem('user_credentials')
-    if (storedUser) {
-      const user = JSON.parse(storedUser)
-      if (user.email === loginEmail) { onLogin(user) }
-      else { setError('No account found with this email. Please sign up first.') }
-    } else { setError('No account found. Please sign up first.') }
+  // Save to Supabase
+  const { error } = await supabase.from('users').insert({
+    nickname: formData.nickname,
+    email: formData.email,
+    location: formData.location,
+    facebook_name: formData.facebookName,
+    phone_number: formData.phoneNumber,
+  })
+
+  if (error) {
+    console.error('Signup error:', error)
   }
+
+  localStorage.setItem('user_credentials', JSON.stringify(formData))
+  onLogin(formData)
+}
+
+const handleLogin = async (e: React.FormEvent) => {
+  e.preventDefault()
+
+  if (!loginEmail.trim() || !loginEmail.includes('@')) {
+    setError('Valid email address is required')
+    return
+  }
+
+  // Check localStorage first
+  const storedUser = localStorage.getItem('user_credentials')
+  if (storedUser) {
+    const user = JSON.parse(storedUser)
+    if (user.email === loginEmail) {
+      onLogin(user)
+      return
+    }
+  }
+
+  // Fallback — check Supabase
+  const { data, error } = await supabase
+    .from('users')
+    .select('*')
+    .eq('email', loginEmail)
+    .single()
+
+  if (error || !data) {
+    setError('No account found with this email. Please sign up first.')
+    return
+  }
+
+  // Rebuild credentials from Supabase and save locally
+  const credentials = {
+    nickname: data.nickname,
+    email: data.email,
+    location: data.location,
+    facebookName: data.facebook_name,
+    phoneNumber: data.phone_number,
+  }
+
+  localStorage.setItem('user_credentials', JSON.stringify(credentials))
+  onLogin(credentials)
+}
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
@@ -166,39 +248,60 @@ function Carousel({
                       </div>
                     </div>
                   )}
-                  <div className="relative h-48 bg-secondary overflow-hidden">
-{item.images?.[0] ? (
-  <Image
-    src={item.images[0]}
-    alt={item.title}
-    fill
-    className={`object-cover transition-transform duration-300 group-hover:scale-105 ${isSold ? 'opacity-50' : ''}`}
-    loading={idx === 0 ? "eager" : undefined}
-    unoptimized={true}
-  />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center text-muted-foreground">No image</div>
-                    )}
-                    <div className="absolute top-2 right-2 px-3 py-1 rounded text-xs font-semibold bg-primary text-primary-foreground">
-                      {item.type === 'fixed' ? 'BUY NOW' : 'AUCTION'}
-                    </div>
-                  </div>
+<div className="w-full bg-secondary overflow-hidden relative" style={{ aspectRatio: '3/4' }}>
+  {item.images?.[0] ? (
+    <img
+      src={item.images[0]}
+      alt={item.title}
+      className={`w-full h-full object-cover transition-transform duration-300 group-hover:scale-105 ${isSold ? 'opacity-50' : ''}`}
+      loading={idx === 0 ? "eager" : undefined}
+    />
+  ) : (
+    <div className="h-64 flex items-center justify-center text-muted-foreground">No image</div>
+  )}
+  <div className="absolute top-2 right-2 px-3 py-1 rounded text-xs font-semibold bg-primary text-primary-foreground">
+    {item.type === 'fixed' ? 'BUY NOW' : 'AUCTION'}
+  </div>
+</div>
                   <div className="p-4 flex-1 flex flex-col">
                     <h3 className="text-base font-semibold text-foreground mb-1 line-clamp-1">{item.title}</h3>
                     <p className="text-xs text-muted-foreground mb-3 line-clamp-2 flex-1">
                       {item.description?.substring(0, 100) || 'No description'}...
                     </p>
-                    <div className="flex justify-between items-center mt-auto">
-                      <div>
-                        <div className="text-xs text-muted-foreground">{isSold ? 'Final price' : item.type === 'fixed' ? 'Price' : 'Current bid'}</div>
-                        <div className="text-xl font-bold text-foreground">
-                          ₱{(item.current_bid || item.starting_price || item.price || 0).toLocaleString()}
-                        </div>
-                      </div>
-                      <span className={`text-xs px-2 py-1 rounded font-semibold ${isSold ? 'bg-red-500/10 text-red-400' : 'bg-primary/10 text-primary'}`}>
-                        {isSold ? 'Sold' : item.type === 'fixed' ? 'Buy Now' : `${item.bid_count || 0} bids`}
-                      </span>
-                    </div>
+<div className="flex justify-between items-center mt-auto">
+  <div>
+    {item.type === 'fixed' ? (
+      item.price && item.price > 0 ? (
+        <>
+          <div className="text-xs text-muted-foreground">
+            {isSold ? 'Sold for' : 'Price'}
+          </div>
+          <div className="text-xl font-bold text-foreground">
+            ₱{item.price.toLocaleString()}
+          </div>
+        </>
+      ) : (
+        <div className="text-xs text-muted-foreground italic">—</div>
+      )
+    ) : (
+      item.starting_price && item.starting_price > 0 ? (
+        <>
+          <div className="text-xs text-muted-foreground">
+            {isSold ? 'Final bid' : 'Current bid'}
+          </div>
+          <div className="text-xl font-bold text-foreground">
+            ₱{(item.current_bid || item.starting_price).toLocaleString()}
+          </div>
+        </>
+      ) : (
+        <div className="text-xs text-muted-foreground italic">—</div>
+      )
+    )}
+  </div>
+  <span className={`text-xs px-2 py-1 rounded font-semibold ${isSold ? 'bg-red-500/10 text-red-400' : 'bg-primary/10 text-primary'}`}>
+    {isSold ? 'Sold' : item.type === 'fixed' ? 'Buy Now' : `${item.bid_count || 0} bids`}
+  </span>
+</div>
                   </div>
                 </div>
               </Link>

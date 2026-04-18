@@ -52,9 +52,15 @@ export default function AdminFixedTab({ items }: AdminFixedTabProps) {
                     {item.description}
                   </p>
                 )}
-                <div className="text-3xl font-bold text-foreground mb-4">
-                  ₱{item.price?.toLocaleString()}
-                </div>
+{item.price && item.price > 0 ? (
+  <div className="text-2xl font-bold text-foreground">
+    ₱{item.price.toLocaleString()}
+  </div>
+) : (
+  <div className="text-sm text-muted-foreground italic">
+    Price not listed
+  </div>
+)}
                 <div className="text-xs text-muted-foreground p-3 bg-secondary rounded-lg">
                   <p className="font-semibold mb-1">📱 Payment Instructions:</p>
                   <p>Contact Jopesh via Messenger to arrange payment and delivery.</p>

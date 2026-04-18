@@ -26,7 +26,11 @@ export default function BidSliderInput({
   const [error, setError] = useState('')
   const [submitting, setSubmitting] = useState(false)
 
-  const minimumBid = currentBid > 0 ? currentBid + 100 : startingPrice + 100
+  // If user already bid, minimum is their existing bid + 100
+  // Otherwise use current highest bid + 100
+  const minimumBid = existingBidAmount 
+  ? existingBidAmount + 100 
+  : currentBid > 0 ? currentBid + 100 : startingPrice + 1500
   const maxBid = 100000
 
   // Sync slider and manual input
@@ -87,26 +91,20 @@ export default function BidSliderInput({
     }
   }
 
-  if (hasBidAlready && existingBidAmount) {
-    return (
-      <div className="bg-card border border-border rounded-lg p-6 text-center">
-        <p className="text-foreground font-semibold mb-2">
-          You have already placed a bid on this item.
-        </p>
-        <p className="text-muted-foreground text-sm mb-4">
-          Winners will be contacted via Messenger.
-        </p>
-        <div className="text-2xl font-bold text-foreground">
-          Your bid: ₱{existingBidAmount.toLocaleString()}
-        </div>
-      </div>
-    )
-  }
+return (
+  <div className="space-y-6">
 
-  return (
-    <div className="space-y-6">
-      <div>
-        <div className="flex justify-between items-baseline mb-2">
+    {/* Show existing bid if they already bid */}
+    {hasBidAlready && existingBidAmount && (
+      <div className="bg-primary/10 border border-primary/20 rounded-lg p-4 text-center">
+        <p className="text-sm text-muted-foreground mb-1">Your current bid</p>
+        <p className="text-2xl font-bold text-primary">₱{existingBidAmount.toLocaleString()}</p>
+        <p className="text-xs text-muted-foreground mt-1">Place a higher bid to stay competitive</p>
+      </div>
+    )}
+
+    <div>
+      <div className="flex justify-between items-baseline mb-2">
           <label className="text-sm font-medium text-foreground">
             Bid Amount
           </label>
