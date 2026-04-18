@@ -2,33 +2,24 @@ import { createClient } from '@supabase/supabase-js'
 import { NextRequest, NextResponse } from 'next/server'
 import { Resend } from 'resend'
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-)
-
-const resend = new Resend(process.env.RESEND_API_KEY)
-
 export async function POST(req: NextRequest) {
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  )
+  const resend = new Resend(process.env.RESEND_API_KEY)
+
   try {
     const { item_id, admin_password } = await req.json()
 
-    // Validate admin password
     if (admin_password !== process.env.ADMIN_PASSWORD) {
-      return NextResponse.json(
-        { error: 'Invalid admin password' },
-        { status: 401 }
-      )
+      return NextResponse.json({ error: 'Invalid admin password' }, { status: 401 })
     }
 
     if (!item_id) {
-      return NextResponse.json(
-        { error: 'Missing item_id' },
-        { status: 400 }
-      )
+      return NextResponse.json({ error: 'Missing item_id' }, { status: 400 })
     }
 
-    // Fetch the item
     const { data: item, error: itemError } = await supabase
       .from('items')
       .select('*')
@@ -36,20 +27,13 @@ export async function POST(req: NextRequest) {
       .single()
 
     if (itemError || !item) {
-      return NextResponse.json(
-        { error: 'Item not found' },
-        { status: 404 }
-      )
+      return NextResponse.json({ error: 'Item not found' }, { status: 404 })
     }
 
     if (item.type !== 'auction') {
-      return NextResponse.json(
-        { error: 'Item is not an auction' },
-        { status: 400 }
-      )
+      return NextResponse.json({ error: 'Item is not an auction' }, { status: 400 })
     }
 
-    // Get top 3 unique bids by email
     const { data: allBids } = await supabase
       .from('bids')
       .select('*')
@@ -57,13 +41,9 @@ export async function POST(req: NextRequest) {
       .order('amount', { ascending: false })
 
     if (!allBids || allBids.length === 0) {
-      return NextResponse.json(
-        { error: 'No bids placed on this auction' },
-        { status: 400 }
-      )
+      return NextResponse.json({ error: 'No bids placed on this auction' }, { status: 400 })
     }
 
-    // Get top 3 unique bidders (by email)
     const uniqueBidders = new Map<string, typeof allBids[0]>()
     allBids.forEach(bid => {
       if (!uniqueBidders.has(bid.bidder_email)) {
@@ -75,7 +55,6 @@ export async function POST(req: NextRequest) {
       .sort((a, b) => b.amount - a.amount)
       .slice(0, 3)
 
-    // Create Olympic podium result with full details
     const podium = topThree.map((bid, index) => ({
       rank: index + 1,
       bidder_name: bid.bidder_name,
@@ -85,7 +64,6 @@ export async function POST(req: NextRequest) {
       amount: bid.amount,
     }))
 
-    // Send email to admin
     if (process.env.ADMIN_EMAIL) {
       const emailBody = `
 Auction Ended: ${item.title}
@@ -104,8 +82,7 @@ Phone: ${podium[1].bidder_phone}
 Address: ${podium[1].bidder_address}
 Amount: ₱${podium[1].amount.toLocaleString()}
 
-` : ''}
-${podium[2] ? `🥉 3rd Place (Bronze)
+` : ''}${podium[2] ? `🥉 3rd Place (Bronze)
 Name: ${podium[2].bidder_name}
 Email: ${podium[2].bidder_email}
 Phone: ${podium[2].bidder_phone}
@@ -124,21 +101,14 @@ Contact winners via Facebook Messenger to arrange payment.
       })
     }
 
-    // Mark item status as ended
     await supabase
       .from('items')
       .update({ status: 'ended' })
       .eq('id', item_id)
 
-    return NextResponse.json({
-      success: true,
-      podium,
-    })
+    return NextResponse.json({ success: true, podium })
   } catch (error) {
     console.error('End auction error:', error)
-    return NextResponse.json(
-      { error: 'Failed to end auction' },
-      { status: 500 }
-    )
+    return NextResponse.json({ error: 'Failed to end auction' }, { status: 500 })
   }
 }
