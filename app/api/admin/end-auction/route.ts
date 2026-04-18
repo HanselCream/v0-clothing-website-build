@@ -1,6 +1,5 @@
 import { createClient } from '@supabase/supabase-js'
 import { NextRequest, NextResponse } from 'next/server'
-import { Resend } from 'resend'
 
 export async function POST(req: NextRequest) {
   const supabase = createClient(
@@ -58,38 +57,20 @@ export async function POST(req: NextRequest) {
     }))
 
     if (process.env.ADMIN_EMAIL && process.env.RESEND_API_KEY) {
-      const resend = new Resend(process.env.RESEND_API_KEY)  // ← moved here
-      const emailBody = `
-Auction Ended: ${item.title}
+      const emailBody = `Auction Ended: ${item.title}\n\n🥇 1st Place\nName: ${podium[0]?.bidder_name}\nEmail: ${podium[0]?.bidder_email}\nPhone: ${podium[0]?.bidder_phone}\nAmount: ₱${podium[0]?.amount.toLocaleString()}`
 
-🥇 1st Place (Gold)
-Name: ${podium[0]?.bidder_name}
-Email: ${podium[0]?.bidder_email}
-Phone: ${podium[0]?.bidder_phone}
-Address: ${podium[0]?.bidder_address}
-Amount: ₱${podium[0]?.amount.toLocaleString()}
-
-${podium[1] ? `🥈 2nd Place (Silver)
-Name: ${podium[1].bidder_name}
-Email: ${podium[1].bidder_email}
-Phone: ${podium[1].bidder_phone}
-Address: ${podium[1].bidder_address}
-Amount: ₱${podium[1].amount.toLocaleString()}
-
-` : ''}${podium[2] ? `🥉 3rd Place (Bronze)
-Name: ${podium[2].bidder_name}
-Email: ${podium[2].bidder_email}
-Phone: ${podium[2].bidder_phone}
-Address: ${podium[2].bidder_address}
-Amount: ₱${podium[2].amount.toLocaleString()}
-
-` : ''}Contact winners via Facebook Messenger to arrange payment.`
-
-      await resend.emails.send({
-        from: 'noreply@resend.dev',
-        to: process.env.ADMIN_EMAIL,
-        subject: `Auction Ended — ${item.title}`,
-        text: emailBody,
+      await fetch('https://api.resend.com/emails', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${process.env.RESEND_API_KEY}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          from: 'onboarding@resend.dev',
+          to: process.env.ADMIN_EMAIL,
+          subject: `Auction Ended — ${item.title}`,
+          text: emailBody,
+        }),
       })
     }
 
