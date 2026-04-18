@@ -7,7 +7,6 @@ export async function POST(req: NextRequest) {
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!
   )
-  const resend = new Resend(process.env.RESEND_API_KEY)
 
   try {
     const { item_id, admin_password } = await req.json()
@@ -21,10 +20,7 @@ export async function POST(req: NextRequest) {
     }
 
     const { data: item, error: itemError } = await supabase
-      .from('items')
-      .select('*')
-      .eq('id', item_id)
-      .single()
+      .from('items').select('*').eq('id', item_id).single()
 
     if (itemError || !item) {
       return NextResponse.json({ error: 'Item not found' }, { status: 404 })
@@ -35,10 +31,7 @@ export async function POST(req: NextRequest) {
     }
 
     const { data: allBids } = await supabase
-      .from('bids')
-      .select('*')
-      .eq('item_id', item_id)
-      .order('amount', { ascending: false })
+      .from('bids').select('*').eq('item_id', item_id).order('amount', { ascending: false })
 
     if (!allBids || allBids.length === 0) {
       return NextResponse.json({ error: 'No bids placed on this auction' }, { status: 400 })
@@ -64,7 +57,8 @@ export async function POST(req: NextRequest) {
       amount: bid.amount,
     }))
 
-    if (process.env.ADMIN_EMAIL) {
+    if (process.env.ADMIN_EMAIL && process.env.RESEND_API_KEY) {
+      const resend = new Resend(process.env.RESEND_API_KEY)  // ← moved here
       const emailBody = `
 Auction Ended: ${item.title}
 
@@ -89,9 +83,7 @@ Phone: ${podium[2].bidder_phone}
 Address: ${podium[2].bidder_address}
 Amount: ₱${podium[2].amount.toLocaleString()}
 
-` : ''}
-Contact winners via Facebook Messenger to arrange payment.
-      `
+` : ''}Contact winners via Facebook Messenger to arrange payment.`
 
       await resend.emails.send({
         from: 'noreply@resend.dev',
@@ -101,10 +93,7 @@ Contact winners via Facebook Messenger to arrange payment.
       })
     }
 
-    await supabase
-      .from('items')
-      .update({ status: 'ended' })
-      .eq('id', item_id)
+    await supabase.from('items').update({ status: 'ended' }).eq('id', item_id)
 
     return NextResponse.json({ success: true, podium })
   } catch (error) {
