@@ -248,7 +248,7 @@ function Carousel({
                       </div>
                     </div>
                   )}
-<div className="w-full bg-secondary overflow-hidden relative" style={{ aspectRatio: '3/4' }}>
+<div className="w-full bg-secondary overflow-hidden relative" style={{ aspectRatio: '1/1' }}>
   {item.images?.[0] ? (
     <img
       src={item.images[0]}
