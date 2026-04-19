@@ -243,9 +243,9 @@ const handleBidSubmit = async (amount: number) => {
               {/* SOLD overlay */}
               {item.status === 'ended' && (
                 <div className="absolute inset-0 z-20 flex items-center justify-center pointer-events-none">
-                  <div className="bg-black/70 rounded-full px-6 py-3 border-2 border-red-500 rotate-12">
-                    <span className="text-white font-bold text-2xl tracking-widest">SOLD</span>
-                  </div>
+<div className="bg-black/25 rounded-md px-6 py-3">
+  <span className="text-white font-bold text-2xl tracking-widest">SOLD</span>
+</div>
                 </div>
               )}
 
@@ -336,16 +336,23 @@ const handleBidSubmit = async (amount: number) => {
                       Go back to login →
                     </button>
                   </div>
-                ) : (
-                  <BidSliderInput
-                    currentBid={item.current_bid || 0}
-                    startingPrice={item.starting_price || 0}
-                    onBidSubmit={handleBidSubmit}
-                    isLoading={false}
-                    hasBidAlready={hasBidAlready}
-                    existingBidAmount={existingBidAmount ?? undefined}
-                  />
-                )}
+) : isAuction ? (
+  <BidSliderInput
+    currentBid={item.current_bid || 0}
+    startingPrice={item.starting_price || 0}
+    onBidSubmit={handleBidSubmit}
+    isLoading={false}
+    hasBidAlready={hasBidAlready}
+    existingBidAmount={existingBidAmount ?? undefined}
+  />
+) : (
+  <div className="bg-card border border-border rounded-lg p-6 text-center space-y-3">
+    <p className="text-muted-foreground text-sm">Contact Jopesh via Messenger to purchase.</p>
+    <a href="https://www.facebook.com/jopeshph/#" target="_blank" rel="noopener noreferrer" className="inline-block w-full bg-primary text-primary-foreground font-semibold py-3 rounded-lg hover:bg-primary/90 transition-colors">
+      Message on Facebook
+    </a>
+  </div>
+)}
 
                 {/* Bid Success */}
                 {bidSuccess && (

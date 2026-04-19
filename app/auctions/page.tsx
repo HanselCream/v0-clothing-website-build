@@ -37,9 +37,12 @@ export default function AuctionsPage() {
         .eq('type', 'auction')
         .order('created_at', { ascending: false })
 
-      if (!error && data) {
-        setItems(data)
-      }
+if (!error && data) {
+  setItems([
+    ...data.filter(i => i.status !== 'ended'),
+    ...data.filter(i => i.status === 'ended')
+  ])
+}
       setLoading(false)
     }
 
@@ -134,13 +137,11 @@ export default function AuctionsPage() {
                         </div>
                       )}
 
-                      {isEnded && (
-                        <div className="absolute inset-0 bg-destructive/80 flex items-center justify-center">
-                          <span className="text-destructive-foreground font-bold text-lg">
-                            Auction Ended
-                          </span>
-                        </div>
-                      )}
+{isEnded && (
+  <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+    <span className="text-white font-bold text-lg">Auction Ended</span>
+  </div>
+)}
 
                       <div className="absolute top-2 right-2 px-3 py-1 rounded text-xs font-semibold bg-primary text-primary-foreground">
                         AUCTION
@@ -170,9 +171,9 @@ export default function AuctionsPage() {
                           <span className="text-xs text-muted-foreground">
                             {item.bid_count} bid{item.bid_count !== 1 ? 's' : ''}
                           </span>
-                          <span className={`text-xs font-semibold ${isEnded ? 'text-destructive' : 'text-primary'}`}>
-                            {isEnded ? 'Sold' : 'Click to bid'}
-                          </span>
+<span className={`text-xs font-semibold ${isEnded ? 'text-muted-foreground' : 'text-primary'}`}>
+  {isEnded ? 'Sold' : 'Click to bid'}
+</span>
                         </div>
                       </div>
                     </div>

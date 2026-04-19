@@ -243,9 +243,9 @@ function Carousel({
                 <div className="bg-card border border-border rounded-lg overflow-hidden hover:shadow-lg transition-shadow cursor-pointer h-full flex flex-col relative group">
                   {isSold && (
                     <div className="absolute inset-0 z-10 flex items-center justify-center pointer-events-none">
-                      <div className="bg-black/70 rounded-full px-5 py-2 border-2 border-red-500">
-                        <span className="text-white font-bold text-lg tracking-widest">SOLD</span>
-                      </div>
+<div className="bg-black/25 rounded-md px-5 py-2">
+  <span className="text-white font-bold text-lg tracking-widest">SOLD</span>
+</div>
                     </div>
                   )}
 <div className="w-full bg-secondary overflow-hidden relative" style={{ aspectRatio: '1/1' }}>
@@ -370,8 +370,14 @@ export default function HomePage() {
           .eq('type', 'auction')
           .order('created_at', { ascending: false })
 
-        if (fixedData) setFixedItems(fixedData)
-        if (auctionData) setAuctionItems(auctionData)
+if (fixedData) setFixedItems([
+  ...fixedData.filter(i => i.status !== 'ended'),
+  ...fixedData.filter(i => i.status === 'ended')
+])
+if (auctionData) setAuctionItems([
+  ...auctionData.filter(i => i.status !== 'ended'),
+  ...auctionData.filter(i => i.status === 'ended')
+])
         setLoading(false)
       }
       fetchItems()
