@@ -150,7 +150,6 @@ const handleLogin = async (e: React.FormEvent) => {
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
       <div className="bg-card border border-border rounded-lg p-8 w-full max-w-md">
         <div className="text-center mb-6">
-          <div className="text-5xl mb-4">👕👖👟</div>
           <h1 className="text-3xl font-bold text-foreground mb-2">JOPESH — Wear Yourself</h1>
           <p className="text-muted-foreground">{isSignup ? 'Create an account to start bidding' : 'Login to your account'}</p>
         </div>
@@ -421,8 +420,10 @@ if (auctionData) setAuctionItems([
         </div>
 
         <header className="mb-10 text-center px-2">
-          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-foreground mb-3">JOPESH — Wear Yourself</h1>
-          <p className="text-base sm:text-xl text-muted-foreground">Curated thrift items available for auction or direct purchase</p>
+         <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-foreground mb-3">
+  JOPESH <span className="text-lg sm:text-xl lg:text-2xl font-semibold text-muted-foreground">Wear Yourself</span>
+</h1>
+<p className="text-base sm:text-lg text-muted-foreground">WEARABLE ART — CURATED & REWORKED</p>
           <p className="text-xs sm:text-sm text-muted-foreground mt-2">🤝 Welcome back, <span className="font-semibold text-primary">{userCredentials?.nickname}</span>! Your bids will appear with this nickname.</p>
         </header>
 
