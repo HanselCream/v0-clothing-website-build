@@ -3,7 +3,6 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import Link from 'next/link'
-import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 
 interface Item {
@@ -36,7 +35,10 @@ export default function ItemsPage() {
         .eq('type', 'fixed')
         .order('created_at', { ascending: false })
 
-      if (data) setItems(data)
+      if (data) setItems([
+        ...data.filter(i => i.status !== 'ended'),
+        ...data.filter(i => i.status === 'ended'),
+      ])
       setLoading(false)
     }
 
@@ -84,21 +86,23 @@ export default function ItemsPage() {
               return (
                 <Link href={`/item/${item.id}`} key={item.id}>
                   <div className="bg-card border border-border rounded-lg overflow-hidden hover:shadow-lg transition-shadow cursor-pointer h-full flex flex-col relative group">
+
+                    {/* SOLD overlay — same as homepage carousel */}
                     {isSold && (
                       <div className="absolute inset-0 z-10 flex items-center justify-center pointer-events-none">
-                        <div className="bg-black/70 rounded-full px-5 py-2 border-2 border-red-500">
+                        <div className="bg-black/25 rounded-md px-5 py-2">
                           <span className="text-white font-bold text-lg tracking-widest">SOLD</span>
                         </div>
                       </div>
                     )}
-                    <div className="relative h-48 bg-secondary overflow-hidden">
+
+                    {/* IMAGE — matches homepage: aspectRatio 1/1, plain <img>, same classes */}
+                    <div className="w-full bg-secondary overflow-hidden relative" style={{ aspectRatio: '1/1' }}>
                       {thumbnail ? (
-                        <Image
+                        <img
                           src={thumbnail}
                           alt={item.title}
-                          fill
-                          className={`object-cover transition-transform duration-300 group-hover:scale-105 ${isSold ? 'opacity-50' : ''}`}
-                          unoptimized
+                          className={`w-full h-full object-cover transition-transform duration-300 group-hover:scale-105 ${isSold ? 'opacity-50' : ''}`}
                         />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center text-muted-foreground">
@@ -109,6 +113,7 @@ export default function ItemsPage() {
                         BUY NOW
                       </div>
                     </div>
+
                     <div className="p-4 flex-1 flex flex-col">
                       <h3 className="text-base font-semibold text-foreground mb-1 line-clamp-1">
                         {item.title}
