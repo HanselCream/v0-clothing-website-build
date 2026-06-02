@@ -257,17 +257,14 @@ if (isLoading || items.length === 0) {
         )}
       </div>
 
-      <div className="relative">
-{totalPages > 1 && (
-  <button
-    onClick={prevSlide}
-    disabled={currentIndex === 0}
-    className="absolute left-2 top-1/2 -translate-y-1/2 z-20 w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-primary text-primary-foreground flex items-center justify-center shadow-lg disabled:opacity-30 hover:bg-primary/80 transition-all"
-  >
-    ←
-  </button>
-)}
-
+<div
+        className="relative"
+        onTouchStart={(e) => { (e.currentTarget as any)._touchStartX = e.touches[0].clientX }}
+        onTouchEnd={(e) => {
+          const diff = (e.currentTarget as any)._touchStartX - e.changedTouches[0].clientX
+          if (Math.abs(diff) > 50) { if (diff > 0) nextSlide(); else prevSlide() }
+        }}
+      >
         <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6">
           {currentItems.map((item, idx) => {
             const isSold = item.status === 'ended'
@@ -346,28 +343,34 @@ if (isLoading || items.length === 0) {
         </div>
 
 {totalPages > 1 && (
-  <button
-    onClick={nextSlide}
-    disabled={currentIndex === totalPages - 1}
-    className="absolute right-2 top-1/2 -translate-y-1/2 z-20 w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-primary text-primary-foreground flex items-center justify-center shadow-lg disabled:opacity-30 hover:bg-primary/80 transition-all"
-  >
-    →
-  </button>
-)}
-
-        {totalPages > 1 && (
-          <div className="flex justify-center gap-2 mt-8">
-            {Array.from({ length: totalPages }).map((_, idx) => (
-              <button
-                key={idx}
-                onClick={() => goToPage(idx)}
-                className={`transition-all duration-300 rounded-full ${
-                  currentIndex === idx 
-                    ? 'w-8 h-2 bg-primary' 
-                    : 'w-2 h-2 bg-muted-foreground/50 hover:bg-muted-foreground'
-                }`}
-              />
-            ))}
+          <div className="flex justify-center items-center gap-4 mt-6">
+            <button
+              onClick={prevSlide}
+              disabled={currentIndex === 0}
+              className="w-8 h-8 rounded-full border border-border text-foreground flex items-center justify-center disabled:opacity-20 hover:bg-secondary transition-all text-sm"
+            >
+              ←
+            </button>
+            <div className="flex items-center gap-2">
+              {Array.from({ length: totalPages }).map((_, idx) => (
+                <button
+                  key={idx}
+                  onClick={() => goToPage(idx)}
+                  className={`transition-all duration-300 rounded-full ${
+                    currentIndex === idx
+                      ? 'w-6 h-2 bg-primary'
+                      : 'w-2 h-2 bg-muted-foreground/30 hover:bg-muted-foreground'
+                  }`}
+                />
+              ))}
+            </div>
+            <button
+              onClick={nextSlide}
+              disabled={currentIndex === totalPages - 1}
+              className="w-8 h-8 rounded-full border border-border text-foreground flex items-center justify-center disabled:opacity-20 hover:bg-secondary transition-all text-sm"
+            >
+              →
+            </button>
           </div>
         )}
       </div>
@@ -442,6 +445,18 @@ useEffect(() => {
   }
 }, [isLoggedIn])
 
+// Preload all images so carousel pages show instantly
+  useEffect(() => {
+    const allItems = [...fixedItems, ...auctionItems]
+    allItems.forEach(item => {
+      const src = item.images?.[0] ?? item.image_url
+      if (src) {
+        const img = new window.Image()
+        img.src = src
+      }
+    })
+  }, [fixedItems, auctionItems])
+
   const handleLogin = (credentials: UserCredentials) => {
     setUserCredentials(credentials)
     setIsLoggedIn(true)
@@ -457,7 +472,7 @@ useEffect(() => {
     return <AuthModal onLogin={handleLogin} />
   }
 
-if (loading) {
+if (loading && fixedItems.length === 0 && auctionItems.length === 0) {
   return (
     <div className="min-h-screen bg-background flex flex-col items-center justify-center gap-6">
       <h1 className="text-4xl font-bold text-foreground tracking-widest">JOPESH</h1>
