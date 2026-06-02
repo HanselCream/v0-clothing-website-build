@@ -193,7 +193,7 @@ const handleBidSubmit = async (amount: number) => {
         {/* User Info Bar */}
         {userCredentials && (
           <div className="bg-card border border-border rounded-lg p-3 mb-6 flex items-center gap-4 text-sm">
-            <span className="text-muted-foreground">Viewing as:</span>
+            <span className="text-muted-foreground">Bidding as:</span>
             <span className="font-semibold text-foreground">{userCredentials.nickname}</span>
             <span className="text-muted-foreground">|</span>
             <span className="text-muted-foreground">{userCredentials.email}</span>
@@ -240,15 +240,17 @@ const handleBidSubmit = async (amount: number) => {
                 <div className="w-full h-full flex items-center justify-center text-muted-foreground">No image available</div>
               )}
 
-              {/* SOLD overlay */}
-              {item.status === 'ended' && (
-                <div className="absolute inset-0 z-20 flex items-center justify-center pointer-events-none">
-<div className="bg-black/25 rounded-md px-6 py-3">
-  <span className="text-white font-bold text-2xl tracking-widest">SOLD</span>
-</div>
-                </div>
-              )}
-
+                {/* Auction Ended overlay */}
+                {item.status === 'ended' && isAuction && (
+                  <div className="absolute inset-0 z-20 flex items-center justify-center pointer-events-none bg-black/50">
+                    <span className="text-white font-bold text-2xl tracking-widest">Auction Ended</span>
+                  </div>
+                )}
+                {item.status === 'ended' && !isAuction && (
+                  <div className="absolute inset-0 z-20 flex items-center justify-center pointer-events-none bg-black/50">
+                    <span className="text-white font-bold text-2xl tracking-widest">SOLD</span>
+                  </div>
+                )}
               {hasMultipleImages && !isZoomed && (
                 <>
                   <button onClick={prevImage} disabled={currentImageIndex === 0}

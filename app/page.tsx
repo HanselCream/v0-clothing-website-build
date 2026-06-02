@@ -192,10 +192,17 @@ function Carousel({
   title: string, 
   viewAllLink?: string 
 }) {
-  const [currentIndex, setCurrentIndex] = useState(0)
-  const itemsPerPage = 3
-  const totalPages = Math.ceil(items.length / itemsPerPage)
+    const [currentIndex, setCurrentIndex] = useState(0)
+    const [itemsPerPage, setItemsPerPage] = useState(3)
 
+    useEffect(() => {
+      const update = () => setItemsPerPage(window.innerWidth < 640 ? 2 : 3)
+      update()
+      window.addEventListener('resize', update)
+      return () => window.removeEventListener('resize', update)
+    }, [])
+
+const totalPages = Math.ceil(items.length / itemsPerPage)
   const goToPage = (page: number) => setCurrentIndex(page)
   const nextSlide = () => currentIndex < totalPages - 1 && setCurrentIndex(currentIndex + 1)
   const prevSlide = () => currentIndex > 0 && setCurrentIndex(currentIndex - 1)
@@ -237,17 +244,20 @@ function Carousel({
           </button>
         )}
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+        <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6">
           {currentItems.map((item, idx) => {
             const isSold = item.status === 'ended'
             return (
               <Link href={`/item/${item.id}`} key={item.id}>
                 <div className="bg-card border border-border rounded-lg overflow-hidden hover:shadow-lg transition-shadow cursor-pointer h-full flex flex-col relative group">
-                  {isSold && (
-                    <div className="absolute inset-0 z-10 flex items-center justify-center pointer-events-none">
-<div className="bg-black/25 rounded-md px-5 py-2">
-  <span className="text-white font-bold text-lg tracking-widest">SOLD</span>
-</div>
+                  {isSold && item.type === 'auction' && (
+                    <div className="absolute inset-0 z-10 flex items-center justify-center pointer-events-none bg-black/50">
+                      <span className="text-white font-bold text-lg tracking-widest">Auction Ended</span>
+                    </div>
+                  )}
+                  {isSold && item.type === 'fixed' && (
+                    <div className="absolute inset-0 z-10 flex items-center justify-center pointer-events-none bg-black/50">
+                      <span className="text-white font-bold text-lg tracking-widest">SOLD</span>
                     </div>
                   )}
 <div className="w-full bg-secondary overflow-hidden relative" style={{ aspectRatio: '1/1' }}>
@@ -255,7 +265,7 @@ function Carousel({
     <img
       src={item.images[0]}
       alt={item.title}
-      className={`w-full h-full object-cover transition-transform duration-300 group-hover:scale-105 ${isSold ? 'opacity-50' : ''}`}
+      className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
       loading={idx === 0 ? "eager" : undefined}
     />
   ) : (
@@ -265,9 +275,9 @@ function Carousel({
     {item.type === 'fixed' ? 'BUY NOW' : 'AUCTION'}
   </div>
 </div>
-                  <div className="p-4 flex-1 flex flex-col">
-                    <h3 className="text-base font-semibold text-foreground mb-1 line-clamp-1">{item.title}</h3>
-                    <p className="text-xs text-muted-foreground mb-3 line-clamp-2 flex-1">
+<div className="p-2 sm:p-4 flex-1 flex flex-col">
+  <h3 className="text-xs sm:text-base font-semibold text-foreground mb-1 line-clamp-1">{item.title}</h3>
+  <p className="text-xs text-muted-foreground mb-2 sm:mb-3 line-clamp-2 flex-1">
                       {item.description?.substring(0, 100) || 'No description'}...
                     </p>
 <div className="flex justify-between items-center mt-auto">
@@ -278,9 +288,9 @@ function Carousel({
           <div className="text-xs text-muted-foreground">
             {isSold ? 'Sold for' : 'Price'}
           </div>
-          <div className="text-xl font-bold text-foreground">
-            ₱{item.price.toLocaleString()}
-          </div>
+<div className="text-sm sm:text-xl font-bold text-foreground">
+  ₱{item.price.toLocaleString()}
+</div>
         </>
       ) : (
         <div className="text-xs text-muted-foreground italic">—</div>
@@ -291,9 +301,9 @@ function Carousel({
           <div className="text-xs text-muted-foreground">
             {isSold ? 'Final bid' : 'Current bid'}
           </div>
-          <div className="text-xl font-bold text-foreground">
-            ₱{(item.current_bid || item.starting_price).toLocaleString()}
-          </div>
+<div className="text-sm sm:text-xl font-bold text-foreground">
+  ₱{(item.current_bid || item.starting_price).toLocaleString()}
+</div>
         </>
       ) : (
         <div className="text-xs text-muted-foreground italic">—</div>
@@ -409,30 +419,31 @@ if (auctionData) setAuctionItems([
     )
   }
 
-  return (
-    <main className="min-h-screen bg-background">
-      <div className="container mx-auto px-4 sm:px-8 py-8">
-        <div className="bg-card border border-border rounded-lg p-3 sm:p-4 mb-8 flex flex-col sm:flex-row justify-between items-center gap-3">
-          <div className="flex flex-wrap items-center gap-2 sm:gap-4">
-            <span className="text-sm text-muted-foreground">Bidding as:</span>
-            <span className="font-semibold text-foreground">{userCredentials?.nickname}</span>
-            <div className="text-xs text-muted-foreground">📧 {userCredentials?.email}</div>
-            <div className="text-xs text-muted-foreground hidden sm:block">📍 {userCredentials?.location}</div>
-          </div>
-          <button onClick={handleLogout} className="text-sm text-red-500 hover:text-red-400 font-semibold">Logout</button>
+return (
+  <main className="min-h-screen bg-background">
+    <div className="container mx-auto px-4 sm:px-8 py-8">
+
+      <header className="mb-10 text-center px-2">
+        <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-foreground mb-3">
+          JOPESH
+        </h1>
+        <p className="text-base sm:text-lg text-muted-foreground">WEARABLE ART — CURATED & REWORKED</p>
+      </header>
+
+      <Carousel items={fixedItems} title="Available for Purchase" viewAllLink="/items" />
+      <Carousel items={auctionItems} title="Active Auctions" viewAllLink="/auctions" />
+
+      <div className="mt-8 bg-card border border-border rounded-lg p-3 sm:p-4 flex flex-col sm:flex-row justify-between items-center gap-3">
+        <div className="flex flex-wrap items-center gap-2 sm:gap-4">
+          <span className="text-sm text-muted-foreground">Logged in as:</span>
+          <span className="font-semibold text-foreground">{userCredentials?.nickname}</span>
+          <div className="text-xs text-muted-foreground">📧 {userCredentials?.email}</div>
+          <div className="text-xs text-muted-foreground hidden sm:block">📍 {userCredentials?.location}</div>
         </div>
-
-        <header className="mb-10 text-center px-2">
-         <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-foreground mb-3">
-  JOPESH <span className="text-lg sm:text-xl lg:text-2xl font-semibold text-muted-foreground">Wear Yourself</span>
-</h1>
-<p className="text-base sm:text-lg text-muted-foreground">WEARABLE ART — CURATED & REWORKED</p>
-          <p className="text-xs sm:text-sm text-muted-foreground mt-2">🤝 Welcome back, <span className="font-semibold text-primary">{userCredentials?.nickname}</span>! Your bids will appear with this nickname.</p>
-        </header>
-
-        <Carousel items={fixedItems} title="Available for Purchase" viewAllLink="/items" />
-        <Carousel items={auctionItems} title="Active Auctions" viewAllLink="/auctions" />
+        <button onClick={handleLogout} className="text-sm text-red-500 hover:text-red-400 font-semibold">Logout</button>
       </div>
-    </main>
-  )
+
+    </div>
+  </main>
+)
 }

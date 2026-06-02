@@ -21,6 +21,7 @@ interface Item {
 export default function AuctionsPage() {
   const [items, setItems] = useState<Item[]>([])
   const [loading, setLoading] = useState(true)
+  const [userNickname, setUserNickname] = useState('')
   const router = useRouter()
 
   useEffect(() => {
@@ -29,6 +30,9 @@ export default function AuctionsPage() {
       router.push('/')
       return
     }
+    const user = JSON.parse(storedUser)
+    setUserNickname(user.nickname || user.email)
+    
 
     const fetchItems = async () => {
       const { data, error } = await supabase
@@ -109,13 +113,11 @@ export default function AuctionsPage() {
                   <div className="bg-card border border-border rounded-lg overflow-hidden hover:shadow-lg transition-shadow cursor-pointer h-full flex flex-col relative group">
 
                     {/* SOLD overlay — same as homepage carousel */}
-                    {isEnded && (
-                      <div className="absolute inset-0 z-10 flex items-center justify-center pointer-events-none">
-                        <div className="bg-black/25 rounded-md px-5 py-2">
-                          <span className="text-white font-bold text-lg tracking-widest">SOLD</span>
+                      {isEnded && (
+                        <div className="absolute inset-0 z-10 flex items-center justify-center pointer-events-none bg-black/50">
+                          <span className="text-white font-bold text-lg tracking-widest">Auction Ended</span>
                         </div>
-                      </div>
-                    )}
+                      )}
 
                     {/* IMAGE — matches homepage: aspectRatio 1/1, plain <img>, same classes */}
                     <div className="w-full bg-secondary overflow-hidden relative" style={{ aspectRatio: '1/1' }}>
@@ -123,7 +125,7 @@ export default function AuctionsPage() {
                         <img
                           src={thumbnail}
                           alt={item.title}
-                          className={`w-full h-full object-cover transition-transform duration-300 group-hover:scale-105 ${isEnded ? 'opacity-50' : ''}`}
+                          className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
                         />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center text-muted-foreground">
@@ -162,6 +164,12 @@ export default function AuctionsPage() {
             })}
           </div>
         )}
+<div className="mt-12 bg-card border border-border rounded-lg p-3 sm:p-4 flex flex-col sm:flex-row justify-between items-center gap-3">
+          <div className="flex flex-wrap items-center gap-2 sm:gap-4">
+            <span className="text-sm text-muted-foreground">Bidding as:</span>
+            <span className="font-semibold text-foreground">{userNickname}</span>
+          </div>
+        </div>
       </div>
     </main>
   )
