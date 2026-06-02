@@ -186,11 +186,13 @@ const handleLogin = async (e: React.FormEvent) => {
 function Carousel({ 
   items, 
   title, 
-  viewAllLink 
+  viewAllLink,
+  isLoading
 }: { 
   items: Item[], 
   title: string, 
-  viewAllLink?: string 
+  viewAllLink?: string,
+  isLoading?: boolean
 }) {
     const [currentIndex, setCurrentIndex] = useState(0)
     const [itemsPerPage, setItemsPerPage] = useState(3)
@@ -209,16 +211,38 @@ const totalPages = Math.ceil(items.length / itemsPerPage)
 
   const currentItems = items.slice(currentIndex * itemsPerPage, (currentIndex + 1) * itemsPerPage)
 
-  if (items.length === 0) {
-    return (
-      <div className="mb-16">
-        <h2 className="text-2xl sm:text-3xl font-bold text-foreground mb-6">{title}</h2>
+if (isLoading || items.length === 0) {
+  return (
+    <div className="mb-16">
+      <div className="flex justify-between items-center mb-6">
+        <h2 className="text-2xl sm:text-3xl font-bold text-foreground">{title}</h2>
+        {viewAllLink && (
+          <Link href={viewAllLink} className="text-sm font-semibold px-4 py-2 border border-border rounded-lg text-foreground hover:bg-secondary transition-colors">
+            View All →
+          </Link>
+        )}
+      </div>
+      {isLoading ? (
+        <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6">
+          {[...Array(4)].map((_, i) => (
+            <div key={i} className="bg-card border border-border rounded-lg overflow-hidden">
+              <div className="w-full bg-secondary animate-pulse" style={{ aspectRatio: '1/1' }} />
+              <div className="p-3 space-y-2">
+                <div className="h-3 bg-secondary animate-pulse rounded w-3/4" />
+                <div className="h-3 bg-secondary animate-pulse rounded w-1/2" />
+                <div className="h-4 bg-secondary animate-pulse rounded w-1/3 mt-2" />
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : (
         <div className="text-center py-12 bg-card rounded-lg border border-border">
           <p className="text-muted-foreground">No items available at the moment.</p>
         </div>
-      </div>
-    )
-  }
+      )}
+    </div>
+  )
+}
 
   return (
     <div className="mb-16">
@@ -354,47 +378,69 @@ const totalPages = Math.ceil(items.length / itemsPerPage)
 export default function HomePage() {
   const [fixedItems, setFixedItems] = useState<Item[]>([])
   const [auctionItems, setAuctionItems] = useState<Item[]>([])
-  const [loading, setLoading] = useState(true)
-  const [isLoggedIn, setIsLoggedIn] = useState(false)
-  const [userCredentials, setUserCredentials] = useState<UserCredentials | null>(null)
+const cachedFixed = typeof window !== 'undefined' ? sessionStorage.getItem('cache_fixed') : null
+const cachedAuction = typeof window !== 'undefined' ? sessionStorage.getItem('cache_auction') : null
 
-  useEffect(() => {
-    const storedUser = localStorage.getItem('user_credentials')
-    if (storedUser) {
-      setUserCredentials(JSON.parse(storedUser))
-      setIsLoggedIn(true)
-    }
-    setLoading(false)
-  }, [])
+const storedUserRaw = typeof window !== 'undefined' ? localStorage.getItem('user_credentials') : null
+const storedUser = storedUserRaw ? JSON.parse(storedUserRaw) : null
 
-  useEffect(() => {
-    if (isLoggedIn) {
-      const fetchItems = async () => {
-        const { data: fixedData } = await supabase
-          .from('items')
-          .select('*')
-          .eq('type', 'fixed')
-          .order('created_at', { ascending: false })
+const [loading, setLoading] = useState(!cachedFixed || !cachedAuction)
+const [isLoggedIn, setIsLoggedIn] = useState(!!storedUser)
+const [userCredentials, setUserCredentials] = useState<UserCredentials | null>(storedUser)
 
-        const { data: auctionData } = await supabase
-          .from('items')
-          .select('*')
-          .eq('type', 'auction')
-          .order('created_at', { ascending: false })
+useEffect(() => {
+  const raw = localStorage.getItem('user_credentials')
+  if (raw) {
+    setUserCredentials(JSON.parse(raw))
+    setIsLoggedIn(true)
+  }
+  setLoading(false)
+}, [])
 
-if (fixedData) setFixedItems([
-  ...fixedData.filter(i => i.status !== 'ended'),
-  ...fixedData.filter(i => i.status === 'ended')
-])
-if (auctionData) setAuctionItems([
-  ...auctionData.filter(i => i.status !== 'ended'),
-  ...auctionData.filter(i => i.status === 'ended')
-])
-        setLoading(false)
+useEffect(() => {
+  if (isLoggedIn) {
+    // Load from cache instantly
+    const cachedFixed = sessionStorage.getItem('cache_fixed')
+    const cachedAuction = sessionStorage.getItem('cache_auction')
+    if (cachedFixed) setFixedItems(JSON.parse(cachedFixed))
+    if (cachedAuction) setAuctionItems(JSON.parse(cachedAuction))
+    if (cachedFixed && cachedAuction) setLoading(false)
+
+    // Always refresh in background
+    const fetchItems = async () => {
+      const { data: fixedData } = await supabase
+        .from('items')
+        .select('*')
+        .eq('type', 'fixed')
+        .order('created_at', { ascending: false })
+
+      const { data: auctionData } = await supabase
+        .from('items')
+        .select('*')
+        .eq('type', 'auction')
+        .order('created_at', { ascending: false })
+
+      if (fixedData) {
+        const sorted = [
+          ...fixedData.filter(i => i.status !== 'ended'),
+          ...fixedData.filter(i => i.status === 'ended')
+        ]
+        setFixedItems(sorted)
+        sessionStorage.setItem('cache_fixed', JSON.stringify(sorted))
       }
-      fetchItems()
+      if (auctionData) {
+        const sorted = [
+          ...auctionData.filter(i => i.status !== 'ended'),
+          ...auctionData.filter(i => i.status === 'ended')
+        ]
+        setAuctionItems(sorted)
+        sessionStorage.setItem('cache_auction', JSON.stringify(sorted))
+      }
+      setLoading(false)
     }
-  }, [isLoggedIn])
+    fetchItems()
+  }
+}, [isLoggedIn])
 
   const handleLogin = (credentials: UserCredentials) => {
     setUserCredentials(credentials)
@@ -411,13 +457,19 @@ if (auctionData) setAuctionItems([
     return <AuthModal onLogin={handleLogin} />
   }
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center text-foreground">Loading items...</div>
+if (loading) {
+  return (
+    <div className="min-h-screen bg-background flex flex-col items-center justify-center gap-6">
+      <h1 className="text-4xl font-bold text-foreground tracking-widest">JOPESH</h1>
+      <p className="text-sm text-muted-foreground tracking-widest uppercase">Wearable Art — Curated & Reworked</p>
+      <div className="flex gap-2 mt-4">
+        <span className="w-2 h-2 rounded-full bg-primary animate-bounce" style={{ animationDelay: '0ms' }} />
+        <span className="w-2 h-2 rounded-full bg-primary animate-bounce" style={{ animationDelay: '150ms' }} />
+        <span className="w-2 h-2 rounded-full bg-primary animate-bounce" style={{ animationDelay: '300ms' }} />
       </div>
-    )
-  }
+    </div>
+  )
+}
 
 return (
   <main className="min-h-screen bg-background">
@@ -430,8 +482,8 @@ return (
         <p className="text-base sm:text-lg text-muted-foreground">WEARABLE ART — CURATED & REWORKED</p>
       </header>
 
-      <Carousel items={fixedItems} title="Available for Purchase" viewAllLink="/items" />
-      <Carousel items={auctionItems} title="Active Auctions" viewAllLink="/auctions" />
+      <Carousel items={fixedItems} title="Available for Purchase" viewAllLink="/items" isLoading={fixedItems.length === 0} />
+    <Carousel items={auctionItems} title="Active Auctions" viewAllLink="/auctions" isLoading={auctionItems.length === 0} />
 
       <div className="mt-8 bg-card border border-border rounded-lg p-3 sm:p-4 flex flex-col sm:flex-row justify-between items-center gap-3">
         <div className="flex flex-wrap items-center gap-2 sm:gap-4">

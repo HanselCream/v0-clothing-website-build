@@ -154,15 +154,19 @@ const handleBidSubmit = async (amount: number) => {
   setBidSuccess(true)
 }
 
-  if (loading) {
-    return (
-      <main className="min-h-screen bg-background">
-        <div className="container mx-auto px-4 py-8">
-          <div className="text-center text-foreground">Loading...</div>
-        </div>
-      </main>
-    )
-  }
+if (loading) {
+  return (
+    <div className="min-h-screen bg-background flex flex-col items-center justify-center gap-6">
+      <h1 className="text-4xl font-bold text-foreground tracking-widest">JOPESH</h1>
+      <p className="text-sm text-muted-foreground tracking-widest uppercase">Wearable Art — Curated & Reworked</p>
+      <div className="flex gap-2 mt-4">
+        <span className="w-2 h-2 rounded-full bg-primary animate-bounce" style={{ animationDelay: '0ms' }} />
+        <span className="w-2 h-2 rounded-full bg-primary animate-bounce" style={{ animationDelay: '150ms' }} />
+        <span className="w-2 h-2 rounded-full bg-primary animate-bounce" style={{ animationDelay: '300ms' }} />
+      </div>
+    </div>
+  )
+}
 
   if (error || !item) {
     return (
@@ -192,11 +196,11 @@ const handleBidSubmit = async (amount: number) => {
 
         {/* User Info Bar */}
         {userCredentials && (
-          <div className="bg-card border border-border rounded-lg p-3 mb-6 flex items-center gap-4 text-sm">
-            <span className="text-muted-foreground">Bidding as:</span>
-            <span className="font-semibold text-foreground">{userCredentials.nickname}</span>
-            <span className="text-muted-foreground">|</span>
-            <span className="text-muted-foreground">{userCredentials.email}</span>
+          <div className="bg-card border border-border rounded-lg p-3 mb-6 flex items-center gap-2 text-sm flex-wrap">
+            <span className="text-muted-foreground whitespace-nowrap">Bidding as:</span>
+            <span className="font-semibold text-foreground whitespace-nowrap">{userCredentials.nickname}</span>
+            <span className="text-muted-foreground hidden sm:block">|</span>
+            <span className="text-muted-foreground text-xs truncate max-w-[180px] sm:max-w-none">{userCredentials.email}</span>
           </div>
         )}
 

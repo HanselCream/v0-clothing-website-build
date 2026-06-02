@@ -28,30 +28,48 @@ export default function ItemsPage() {
       return
     }
 
-    const fetchItems = async () => {
-      const { data } = await supabase
-        .from('items')
-        .select('*')
-        .eq('type', 'fixed')
-        .order('created_at', { ascending: false })
+// Load from cache instantly
+const cached = sessionStorage.getItem('cache_fixed')
+if (cached) {
+  setItems(JSON.parse(cached))
+  setLoading(false)
+}
 
-      if (data) setItems([
-        ...data.filter(i => i.status !== 'ended'),
-        ...data.filter(i => i.status === 'ended'),
-      ])
-      setLoading(false)
-    }
+// Always refresh in background
+const fetchItems = async () => {
+  const { data } = await supabase
+    .from('items')
+    .select('*')
+    .eq('type', 'fixed')
+    .order('created_at', { ascending: false })
 
-    fetchItems()
+  if (data) {
+    const sorted = [
+      ...data.filter(i => i.status !== 'ended'),
+      ...data.filter(i => i.status === 'ended'),
+    ]
+    setItems(sorted)
+    sessionStorage.setItem('cache_fixed', JSON.stringify(sorted))
+  }
+  setLoading(false)
+}
+
+fetchItems()
   }, [router])
 
-  if (loading) {
-    return (
-      <main className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-foreground">Loading items...</div>
-      </main>
-    )
-  }
+if (loading) {
+  return (
+    <div className="min-h-screen bg-background flex flex-col items-center justify-center gap-6">
+      <h1 className="text-4xl font-bold text-foreground tracking-widest">JOPESH</h1>
+      <p className="text-sm text-muted-foreground tracking-widest uppercase">Wearable Art — Curated & Reworked</p>
+      <div className="flex gap-2 mt-4">
+        <span className="w-2 h-2 rounded-full bg-primary animate-bounce" style={{ animationDelay: '0ms' }} />
+        <span className="w-2 h-2 rounded-full bg-primary animate-bounce" style={{ animationDelay: '150ms' }} />
+        <span className="w-2 h-2 rounded-full bg-primary animate-bounce" style={{ animationDelay: '300ms' }} />
+      </div>
+    </div>
+  )
+}
 
   return (
     <main className="min-h-screen bg-background">
