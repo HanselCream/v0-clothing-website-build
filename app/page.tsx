@@ -234,15 +234,15 @@ const totalPages = Math.ceil(items.length / itemsPerPage)
       </div>
 
       <div className="relative">
-        {totalPages > 1 && (
-          <button
-            onClick={prevSlide}
-            disabled={currentIndex === 0}
-            className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-3 sm:-translate-x-5 z-10 w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-primary/80 text-primary-foreground flex items-center justify-center shadow-lg disabled:opacity-30 hover:bg-primary transition-all"
-          >
-            ←
-          </button>
-        )}
+{totalPages > 1 && (
+  <button
+    onClick={prevSlide}
+    disabled={currentIndex === 0}
+    className="absolute left-2 top-1/2 -translate-y-1/2 z-20 w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-primary text-primary-foreground flex items-center justify-center shadow-lg disabled:opacity-30 hover:bg-primary/80 transition-all"
+  >
+    ←
+  </button>
+)}
 
         <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6">
           {currentItems.map((item, idx) => {
@@ -321,15 +321,15 @@ const totalPages = Math.ceil(items.length / itemsPerPage)
           })}
         </div>
 
-        {totalPages > 1 && (
-          <button
-            onClick={nextSlide}
-            disabled={currentIndex === totalPages - 1}
-            className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-3 sm:translate-x-5 z-10 w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-primary/80 text-primary-foreground flex items-center justify-center shadow-lg disabled:opacity-30 hover:bg-primary transition-all"
-          >
-            →
-          </button>
-        )}
+{totalPages > 1 && (
+  <button
+    onClick={nextSlide}
+    disabled={currentIndex === totalPages - 1}
+    className="absolute right-2 top-1/2 -translate-y-1/2 z-20 w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-primary text-primary-foreground flex items-center justify-center shadow-lg disabled:opacity-30 hover:bg-primary/80 transition-all"
+  >
+    →
+  </button>
+)}
 
         {totalPages > 1 && (
           <div className="flex justify-center gap-2 mt-8">
