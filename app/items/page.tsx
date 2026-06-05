@@ -60,7 +60,13 @@ fetchItems()
 if (loading) {
   return (
     <div className="min-h-screen bg-background flex flex-col items-center justify-center gap-6">
-      <h1 className="text-4xl font-bold text-foreground tracking-widest">JOPESH</h1>
+<div className="mb-4">
+  <img 
+    src="/jopesh-logo.png" 
+    alt="JOPESH" 
+    className="w-auto h-20 sm:h-24 md:h-28 mx-auto"
+  />
+</div>
       <p className="text-sm text-muted-foreground tracking-widest uppercase">Wearable Art — Curated & Reworked</p>
       <div className="flex gap-2 mt-4">
         <span className="w-2 h-2 rounded-full bg-primary animate-bounce" style={{ animationDelay: '0ms' }} />

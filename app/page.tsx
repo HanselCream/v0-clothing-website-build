@@ -150,9 +150,13 @@ const handleLogin = async (e: React.FormEvent) => {
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
       <div className="bg-card border border-border rounded-lg p-8 w-full max-w-md">
         <div className="text-center mb-6">
-                   <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-foreground mb-3">
-  JOPESH <span className="text-lg sm:text-xl lg:text-2xl font-semibold text-muted-foreground">Wear Yourself</span>
-</h1>
+<div className="mb-4">
+  <img 
+    src="/jopesh-logo.png" 
+    alt="JOPESH" 
+    className="w-auto h-20 sm:h-24 md:h-28 mx-auto"
+  />
+</div>
           <p className="text-base sm:text-lg text-muted-foreground">WEARABLE ART — CURATED & REWORKED</p>
           <p className="text-muted-foreground">{isSignup ? 'Create an account to start bidding' : 'Login to your account'}</p>
         </div>
@@ -457,9 +461,13 @@ return (
     <div className="container mx-auto px-4 sm:px-8 py-8">
 
       <header className="mb-10 text-center px-2">
-        <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-foreground mb-3">
-          JOPESH
-        </h1>
+<div className="mb-4">
+  <img 
+    src="/jopesh-logo.png" 
+    alt="JOPESH" 
+    className="w-auto h-20 sm:h-24 md:h-28 mx-auto"
+  />
+</div>
         <p className="text-base sm:text-lg text-muted-foreground">WEARABLE ART — CURATED & REWORKED</p>
       </header>
 
