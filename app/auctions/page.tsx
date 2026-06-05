@@ -103,21 +103,20 @@ if (loading) {
           <span className="text-xl group-hover:-translate-x-1 transition-transform">←</span>
           <span>Back to JOPESH</span>
         </button>
-
-        <header className="mb-8">
-          <h1 className="text-3xl sm:text-4xl font-bold text-foreground">
-            Active Auctions{' '}
-            <span className="text-muted-foreground text-2xl">({items.length})</span>
-          </h1>
-          <p className="text-muted-foreground mt-2">Browse and bid on premium items</p>
-        </header>
+<header className="mb-8">
+  <h1 className="text-3xl sm:text-4xl font-bold text-foreground">
+    Auctions{' '}
+    <span className="text-muted-foreground text-2xl">({items.length})</span>
+  </h1>
+  <p className="text-muted-foreground mt-2">Browse and bid on premium items</p>
+</header>
 
         {items.length === 0 ? (
           <div className="text-center py-12">
             <p className="text-muted-foreground text-lg">No auctions available at the moment</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
+          <div className="grid grid-cols-2 gap-4 sm:gap-6">
             {items.map((item) => {
               const isEnded = item.status === 'ended'
               const thumbnail = item.images?.[0] ?? item.image_url
@@ -127,11 +126,11 @@ if (loading) {
                   <div className="bg-card border border-border rounded-lg overflow-hidden hover:shadow-lg transition-shadow cursor-pointer h-full flex flex-col relative group">
 
                     {/* SOLD overlay — same as homepage carousel */}
-                      {isEnded && (
-                        <div className="absolute inset-0 z-10 flex items-center justify-center pointer-events-none bg-black/50">
-                          <span className="text-white font-bold text-lg tracking-widest">Auction Ended</span>
-                        </div>
-                      )}
+{isEnded && (
+  <div className="absolute inset-0 z-10 flex items-center justify-center pointer-events-none bg-black/50">
+    <span className="text-white font-bold text-xl tracking-widest text-center">AUCTION<br />ENDED</span>
+  </div>
+)}
 
                     {/* IMAGE — matches homepage: aspectRatio 1/1, plain <img>, same classes */}
                     <div className="w-full bg-secondary overflow-hidden relative" style={{ aspectRatio: '1/1' }}>
@@ -146,9 +145,7 @@ if (loading) {
                           No image
                         </div>
                       )}
-                      <div className="absolute top-2 right-2 px-3 py-1 rounded text-xs font-semibold bg-primary text-primary-foreground">
-                        AUCTION
-                      </div>
+
                     </div>
 
                     <div className="p-4 flex-1 flex flex-col">
@@ -158,19 +155,15 @@ if (loading) {
                       <p className="text-xs text-muted-foreground mb-3 line-clamp-2 flex-1">
                         {item.description?.substring(0, 100) || 'No description'}...
                       </p>
-                      <div className="flex justify-between items-center mt-auto">
-                        <div>
-                          <div className="text-xs text-muted-foreground">
-                            {isEnded ? 'Final bid' : 'Current Bid'}
-                          </div>
-                          <div className="text-xl font-bold text-foreground">
-                            {item.current_bid ? `₱${item.current_bid.toLocaleString()}` : '—'}
-                          </div>
-                        </div>
-                        <span className={`text-xs px-2 py-1 rounded font-semibold ${isEnded ? 'bg-red-500/10 text-red-400' : 'bg-primary/10 text-primary'}`}>
-                          {isEnded ? 'Sold' : `${item.bid_count || 0} bids`}
-                        </span>
-                      </div>
+<div className="flex justify-between items-center mt-auto">
+  <div>
+    <div className="text-xl font-bold text-foreground">
+      {item.current_bid ? `₱${item.current_bid.toLocaleString()}` : '—'}
+    </div>
+  </div>
+  {/* Status badge removed */}
+</div>
+
                     </div>
                   </div>
                 </Link>

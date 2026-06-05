@@ -270,17 +270,18 @@ if (isLoading || items.length === 0) {
             const isSold = item.status === 'ended'
             return (
               <Link href={`/item/${item.id}`} key={item.id}>
+
                 <div className="bg-card border border-border rounded-lg overflow-hidden hover:shadow-lg transition-shadow cursor-pointer h-full flex flex-col relative group">
-                  {isSold && item.type === 'auction' && (
-                    <div className="absolute inset-0 z-10 flex items-center justify-center pointer-events-none bg-black/50">
-                      <span className="text-white font-bold text-lg tracking-widest">Auction Ended</span>
-                    </div>
-                  )}
-                  {isSold && item.type === 'fixed' && (
-                    <div className="absolute inset-0 z-10 flex items-center justify-center pointer-events-none bg-black/50">
-                      <span className="text-white font-bold text-lg tracking-widest">SOLD</span>
-                    </div>
-                  )}
+{isSold && item.type === 'auction' && (
+  <div className="absolute inset-0 z-10 flex items-center justify-center pointer-events-none bg-black/50">
+    <span className="text-white font-bold text-xl tracking-widest text-center">AUCTION<br />ENDED</span>
+  </div>
+)}
+{isSold && item.type === 'fixed' && (
+  <div className="absolute inset-0 z-10 flex items-center justify-center pointer-events-none bg-black/50">
+    <span className="text-white font-bold text-2xl tracking-widest text-center">SOLD</span>
+  </div>
+)}
 <div className="w-full bg-secondary overflow-hidden relative" style={{ aspectRatio: '1/1' }}>
   {item.images?.[0] ? (
     <img
@@ -292,48 +293,32 @@ if (isLoading || items.length === 0) {
   ) : (
     <div className="h-64 flex items-center justify-center text-muted-foreground">No image</div>
   )}
-  <div className="absolute top-2 right-2 px-3 py-1 rounded text-xs font-semibold bg-primary text-primary-foreground">
-    {item.type === 'fixed' ? 'BUY NOW' : 'AUCTION'}
-  </div>
 </div>
 <div className="p-2 sm:p-4 flex-1 flex flex-col">
+
   <h3 className="text-xs sm:text-base font-semibold text-foreground mb-1 line-clamp-1">{item.title}</h3>
-  <p className="text-xs text-muted-foreground mb-2 sm:mb-3 line-clamp-2 flex-1">
-                      {item.description?.substring(0, 100) || 'No description'}...
-                    </p>
+
 <div className="flex justify-between items-center mt-auto">
   <div>
     {item.type === 'fixed' ? (
       item.price && item.price > 0 ? (
-        <>
-          <div className="text-xs text-muted-foreground">
-            {isSold ? 'Sold for' : 'Price'}
-          </div>
-<div className="text-sm sm:text-xl font-bold text-foreground">
-  ₱{item.price.toLocaleString()}
-</div>
-        </>
+        <div className="text-sm sm:text-xl font-bold text-foreground">
+          ₱{item.price.toLocaleString()}
+        </div>
       ) : (
         <div className="text-xs text-muted-foreground italic">—</div>
       )
     ) : (
       item.starting_price && item.starting_price > 0 ? (
-        <>
-          <div className="text-xs text-muted-foreground">
-            {isSold ? 'Final bid' : 'Current bid'}
-          </div>
-<div className="text-sm sm:text-xl font-bold text-foreground">
-  ₱{(item.current_bid || item.starting_price).toLocaleString()}
-</div>
-        </>
+        <div className="text-sm sm:text-xl font-bold text-foreground">
+          ₱{(item.current_bid || item.starting_price).toLocaleString()}
+        </div>
       ) : (
         <div className="text-xs text-muted-foreground italic">—</div>
       )
     )}
   </div>
-  <span className={`text-xs px-2 py-1 rounded font-semibold ${isSold ? 'bg-red-500/10 text-red-400' : 'bg-primary/10 text-primary'}`}>
-    {isSold ? 'Sold' : item.type === 'fixed' ? 'Buy Now' : `${item.bid_count || 0} bids`}
-  </span>
+  {/* Status badge removed - no text shown */}
 </div>
                   </div>
                 </div>
@@ -343,36 +328,23 @@ if (isLoading || items.length === 0) {
         </div>
 
 {totalPages > 1 && (
-          <div className="flex justify-center items-center gap-4 mt-6">
-            <button
-              onClick={prevSlide}
-              disabled={currentIndex === 0}
-              className="w-8 h-8 rounded-full border border-border text-foreground flex items-center justify-center disabled:opacity-20 hover:bg-secondary transition-all text-sm"
-            >
-              ←
-            </button>
-            <div className="flex items-center gap-2">
-              {Array.from({ length: totalPages }).map((_, idx) => (
-                <button
-                  key={idx}
-                  onClick={() => goToPage(idx)}
-                  className={`transition-all duration-300 rounded-full ${
-                    currentIndex === idx
-                      ? 'w-6 h-2 bg-primary'
-                      : 'w-2 h-2 bg-muted-foreground/30 hover:bg-muted-foreground'
-                  }`}
-                />
-              ))}
-            </div>
-            <button
-              onClick={nextSlide}
-              disabled={currentIndex === totalPages - 1}
-              className="w-8 h-8 rounded-full border border-border text-foreground flex items-center justify-center disabled:opacity-20 hover:bg-secondary transition-all text-sm"
-            >
-              →
-            </button>
-          </div>
-        )}
+  <div className="flex justify-center items-center gap-4 mt-6">
+    <button
+      onClick={prevSlide}
+      disabled={currentIndex === 0}
+      className="text-2xl text-muted-foreground hover:text-foreground disabled:opacity-30 transition-colors"
+    >
+      ‹
+    </button>
+    <button
+      onClick={nextSlide}
+      disabled={currentIndex === totalPages - 1}
+      className="text-2xl text-muted-foreground hover:text-foreground disabled:opacity-30 transition-colors"
+    >
+      ›
+    </button>
+  </div>
+)}
       </div>
     </div>
   )
@@ -491,9 +463,8 @@ return (
         <p className="text-base sm:text-lg text-muted-foreground">WEARABLE ART — CURATED & REWORKED</p>
       </header>
 
-      <Carousel items={fixedItems} title="Available for Purchase" viewAllLink="/items" isLoading={fixedItems.length === 0} />
-    <Carousel items={auctionItems} title="Active Auctions" viewAllLink="/auctions" isLoading={auctionItems.length === 0} />
-
+      <Carousel items={fixedItems} title="Collection" viewAllLink="/items" isLoading={fixedItems.length === 0} />
+<Carousel items={auctionItems} title="Auctions" viewAllLink="/auctions" isLoading={auctionItems.length === 0} />
       <div className="mt-8 bg-card border border-border rounded-lg p-3 sm:p-4 flex flex-col sm:flex-row justify-between items-center gap-3">
         <div className="flex flex-wrap items-center gap-2 sm:gap-4">
           <span className="text-sm text-muted-foreground">Logged in as:</span>

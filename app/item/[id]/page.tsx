@@ -22,6 +22,31 @@ interface Item {
 }
 
 export default function ItemPage() {
+  // Format description with proper line breaks for measurements
+const formatDescription = (description: string) => {
+  if (!description) return ''
+  
+  // Split measurements onto new lines
+  let formatted = description
+    .replace(/Length:/g, '\nLength:')
+    .replace(/Width:/g, '\nWidth:')
+    .replace(/Waist:/g, '\nWaist:')
+    .replace(/Hem:/g, '\nHem:')
+    .replace(/Leg:/g, '\nLeg:')
+    .replace(/Size fits:/g, '\nSize fits:')
+    .replace(/Increment:/g, '\nIncrement:')
+    .replace(/Drop your best offer/g, '\nDrop your best offer')
+  
+  // Clean up extra newlines at start
+  formatted = formatted.replace(/^\n+/, '')
+  
+  // Split into lines and render
+  return formatted.split('\n').map((line, i) => (
+    <p key={i} className="text-lg text-muted-foreground mb-2">
+      {line}
+    </p>
+  ))
+}
   const params = useParams()
   const router = useRouter()
   const id = params.id as string
@@ -257,10 +282,10 @@ if (loading) {
                 )}
               {hasMultipleImages && !isZoomed && (
                 <>
-                  <button onClick={prevImage} disabled={currentImageIndex === 0}
-                    className="absolute left-2 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-black/50 text-white flex items-center justify-center hover:bg-black/70 disabled:opacity-30 z-30">←</button>
-                  <button onClick={nextImage} disabled={currentImageIndex === allImages.length - 1}
-                    className="absolute right-2 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-black/50 text-white flex items-center justify-center hover:bg-black/70 disabled:opacity-30 z-30">→</button>
+                 <button onClick={prevImage} disabled={currentImageIndex === 0}
+  className="absolute left-2 top-1/2 -translate-y-1/2 text-3xl text-white drop-shadow-lg hover:text-gray-300 disabled:opacity-30 z-30">‹</button>
+<button onClick={nextImage} disabled={currentImageIndex === allImages.length - 1}
+  className="absolute right-2 top-1/2 -translate-y-1/2 text-3xl text-white drop-shadow-lg hover:text-gray-300 disabled:opacity-30 z-30">›</button>
                 </>
               )}
 
@@ -296,29 +321,21 @@ if (loading) {
                 {isAuction ? 'AUCTION' : 'FIXED PRICE'}
               </span>
               <h1 className="text-4xl font-bold text-foreground mb-4">{item.title}</h1>
-              <p className="text-lg text-muted-foreground mb-6 whitespace-pre-line">{item.description}</p>
+              <div className="text-lg text-muted-foreground mb-6">
+  {formatDescription(item.description)}
+</div>
 
               <div className="bg-card border border-border rounded-lg p-6 mb-6">
- {isAuction ? (
+{isAuction ? (
   item.starting_price && item.starting_price > 0 ? (
-    <div>
-      <div className="text-sm text-muted-foreground mb-1">
-        {item.status === 'ended' ? 'Final bid' : 'Starting bid'}
-      </div>
-      <div className="text-3xl font-bold text-foreground">
-        ₱{item.starting_price.toLocaleString()}
-      </div>
+    <div className="text-3xl font-bold text-foreground">
+      ₱{item.starting_price.toLocaleString()}
     </div>
   ) : null
 ) : (
   item.price && item.price > 0 ? (
-    <div>
-      <div className="text-sm text-muted-foreground mb-1">
-        {item.status === 'ended' ? 'Sold for' : 'Price'}
-      </div>
-      <div className="text-3xl font-bold text-foreground">
-        ₱{item.price.toLocaleString()}
-      </div>
+    <div className="text-3xl font-bold text-foreground">
+      ₱{item.price.toLocaleString()}
     </div>
   ) : null
 )}
