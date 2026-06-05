@@ -381,15 +381,9 @@ if (isLoading || items.length === 0) {
 export default function HomePage() {
   const [fixedItems, setFixedItems] = useState<Item[]>([])
   const [auctionItems, setAuctionItems] = useState<Item[]>([])
-const cachedFixed = typeof window !== 'undefined' ? sessionStorage.getItem('cache_fixed') : null
-const cachedAuction = typeof window !== 'undefined' ? sessionStorage.getItem('cache_auction') : null
-
-const storedUserRaw = typeof window !== 'undefined' ? localStorage.getItem('user_credentials') : null
-const storedUser = storedUserRaw ? JSON.parse(storedUserRaw) : null
-
-const [loading, setLoading] = useState(!cachedFixed || !cachedAuction)
-const [isLoggedIn, setIsLoggedIn] = useState(!!storedUser)
-const [userCredentials, setUserCredentials] = useState<UserCredentials | null>(storedUser)
+  const [loading, setLoading] = useState(true)
+const [isLoggedIn, setIsLoggedIn] = useState(false)
+const [userCredentials, setUserCredentials] = useState<UserCredentials | null>(null)
 
 useEffect(() => {
   const raw = localStorage.getItem('user_credentials')
