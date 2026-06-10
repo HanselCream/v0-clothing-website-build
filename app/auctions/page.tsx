@@ -35,6 +35,7 @@ export default function AuctionsPage() {
     
 
 // Load from cache instantly
+sessionStorage.removeItem('cache_auction')
 const cached = sessionStorage.getItem('cache_auction')
 if (cached) {
   setItems(JSON.parse(cached))
@@ -154,23 +155,23 @@ if (loading) {
 
                     </div>
 
-                    <div className="p-4 flex-1 flex flex-col">
-                      <h3 className="text-base font-semibold text-foreground mb-1 line-clamp-1">
-                        {item.title}
-                      </h3>
-                      <p className="text-xs text-muted-foreground mb-3 line-clamp-2 flex-1">
-                        {item.description?.substring(0, 100) || 'No description'}...
-                      </p>
-<div className="flex justify-between items-center mt-auto">
-  <div>
-    <div className="text-xl font-bold text-foreground">
-      {item.current_bid ? `₱${item.current_bid.toLocaleString()}` : '—'}
+<div className="p-2 sm:p-4 flex-1 flex flex-col">
+  <h3 className="text-xs sm:text-base font-semibold text-foreground mb-1 line-clamp-1">
+    {item.title}
+  </h3>
+  <div className="flex justify-between items-end mt-auto">
+    <div>
+      <div className="text-sm sm:text-xl font-bold text-foreground">
+        ₱{(item.starting_price ?? 0).toLocaleString()}
+      </div>
+      {(item.bid_count ?? 0) > 0 && (
+        <div className="text-xs text-muted-foreground mt-0.5">
+          {item.bid_count} bid{item.bid_count !== 1 ? 's' : ''}
+        </div>
+      )}
     </div>
   </div>
-  {/* Status badge removed */}
 </div>
-
-                    </div>
                   </div>
                 </Link>
               )

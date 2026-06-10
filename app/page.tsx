@@ -314,15 +314,21 @@ if (isLoading || items.length === 0) {
       )
     ) : (
       item.starting_price && item.starting_price > 0 ? (
-        <div className="text-sm sm:text-xl font-bold text-foreground">
-          ₱{(item.current_bid || item.starting_price).toLocaleString()}
-        </div>
+        <>
+          <div className="text-sm sm:text-xl font-bold text-foreground">
+            ₱{item.starting_price.toLocaleString()}
+          </div>
+          {(item.bid_count ?? 0) > 0 && (
+            <div className="text-xs text-muted-foreground mt-0.5">
+              {item.bid_count} bid{item.bid_count !== 1 ? 's' : ''}
+            </div>
+          )}
+        </>
       ) : (
         <div className="text-xs text-muted-foreground italic">—</div>
       )
     )}
   </div>
-  {/* Status badge removed - no text shown */}
 </div>
                   </div>
                 </div>
