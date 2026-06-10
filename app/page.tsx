@@ -385,13 +385,13 @@ useEffect(() => {
         .from('items')
         .select('*')
         .eq('type', 'fixed')
-        .order('created_at', { ascending: false })
+        .order('sort_order', { ascending: true })
 
       const { data: auctionData } = await supabase
         .from('items')
         .select('*')
         .eq('type', 'auction')
-        .order('created_at', { ascending: false })
+        .order('sort_order', { ascending: true })
 
       if (fixedData) {
         const sorted = [

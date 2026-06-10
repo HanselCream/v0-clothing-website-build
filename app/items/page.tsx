@@ -41,7 +41,7 @@ const fetchItems = async () => {
     .from('items')
     .select('*')
     .eq('type', 'fixed')
-    .order('created_at', { ascending: false })
+    .order('sort_order', { ascending: true })
 
   if (data) {
     const sorted = [

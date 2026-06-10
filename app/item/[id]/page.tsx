@@ -93,7 +93,7 @@ const formatDescription = (description: string) => {
         .from('bids')
         .select('*')
         .eq('item_id', id)
-        .order('amount', { ascending: false })
+        .order('amount', { ascending: true })
 
 if (bidsData) {
   // Show only highest bid per user

@@ -47,7 +47,7 @@ if (cached) {
       .from('items')
       .select('*')
       .eq('type', 'auction')
-      .order('created_at', { ascending: false })
+      .order('sort_order', { ascending: true })
 
     if (!error && data) {
       const sorted = [

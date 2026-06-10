@@ -38,7 +38,7 @@ export default function AdminPage() {
     const { data: itemsData } = await supabase
       .from('items')
       .select('*')
-      .order('created_at', { ascending: false })
+      .order('sort_order', { ascending: false })
 
     const { data: bidsData } = await supabase
       .from('bids')
