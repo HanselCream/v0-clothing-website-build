@@ -310,7 +310,7 @@ if (isLoading || items.length === 0) {
           ₱{item.price.toLocaleString()}
         </div>
       ) : (
-        <div className="text-xs text-muted-foreground italic">—</div>
+        <div className="text-xs text-muted-foreground italic"></div>
       )
     ) : (
       item.starting_price && item.starting_price > 0 ? (
@@ -342,16 +342,29 @@ if (isLoading || items.length === 0) {
     <button
       onClick={prevSlide}
       disabled={currentIndex === 0}
-      className="text-2xl text-muted-foreground hover:text-foreground disabled:opacity-30 transition-colors"
+      className="w-8 h-8 rounded-full border border-border text-foreground flex items-center justify-center disabled:opacity-20 hover:bg-secondary transition-all text-sm"
     >
-      ‹
+      ←
     </button>
+    <div className="flex items-center gap-2">
+      {Array.from({ length: totalPages }).map((_, idx) => (
+        <button
+          key={idx}
+          onClick={() => goToPage(idx)}
+          className={`transition-all duration-300 rounded-full ${
+            currentIndex === idx
+              ? 'w-6 h-2 bg-primary'
+              : 'w-2 h-2 bg-muted-foreground/30 hover:bg-muted-foreground'
+          }`}
+        />
+      ))}
+    </div>
     <button
       onClick={nextSlide}
       disabled={currentIndex === totalPages - 1}
-      className="text-2xl text-muted-foreground hover:text-foreground disabled:opacity-30 transition-colors"
+      className="w-8 h-8 rounded-full border border-border text-foreground flex items-center justify-center disabled:opacity-20 hover:bg-secondary transition-all text-sm"
     >
-      ›
+      →
     </button>
   </div>
 )}

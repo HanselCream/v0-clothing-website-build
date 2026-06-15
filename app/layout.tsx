@@ -1,32 +1,23 @@
 import type { Metadata } from 'next'
-import { Geist, Geist_Mono } from 'next/font/google'
+
 import { Analytics } from '@vercel/analytics/next'
 import './globals.css'
+import { Lexend } from 'next/font/google'
 
-const _geist = Geist({ subsets: ["latin"] });
-const _geistMono = Geist_Mono({ subsets: ["latin"] });
+const lexend = Lexend({ 
+  subsets: ["latin"],
+  weight: ["300", "500"],
+  variable: "--font-lexend"
+})
 
 export const metadata: Metadata = {
-  title: 'Auction & Sales',
+  title: 'Jopesh',
   description: 'Premium auctions and fixed-price items',
   generator: 'v0.app',
-  icons: {
-    icon: [
-      {
-        url: '/icon-light-32x32.png',
-        media: '(prefers-color-scheme: light)',
-      },
-      {
-        url: '/icon-dark-32x32.png',
-        media: '(prefers-color-scheme: dark)',
-      },
-      {
-        url: '/icon.svg',
-        type: 'image/svg+xml',
-      },
-    ],
-    apple: '/apple-icon.png',
-  },
+icons: {
+  icon: '/app-logo.jpeg',
+  apple: '/app-logo.jpeg',
+},
 }
 
 export default function RootLayout({
@@ -36,7 +27,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className="font-sans antialiased">
+      <body className={`${lexend.variable} font-sans antialiased`}>
         {children}
         <Analytics />
       </body>

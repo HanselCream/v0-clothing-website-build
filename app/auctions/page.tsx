@@ -123,7 +123,7 @@ if (loading) {
             <p className="text-muted-foreground text-lg">No auctions available at the moment</p>
           </div>
         ) : (
-          <div className="grid grid-cols-2 gap-4 sm:gap-6">
+          <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6">
             {items.map((item) => {
               const isEnded = item.status === 'ended'
               const thumbnail = item.images?.[0] ?? item.image_url
