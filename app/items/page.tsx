@@ -8,6 +8,7 @@ import { useRouter } from 'next/navigation'
 interface Item {
   id: string
   title: string
+  subtitle?: string 
   description: string
   image_url: string
   images?: string[]
@@ -133,11 +134,16 @@ if (loading) {
                       )}
                     </div>
 
-                    <div className="p-4 flex-1 flex flex-col">
-                      <h3 className="text-base font-semibold text-foreground mb-1 line-clamp-1">
-                        {item.title}
-                      </h3>
-                      <p className="text-xs text-muted-foreground mb-3 line-clamp-2 flex-1">
+          <div className="p-4 flex-1 flex flex-col">
+            <h3 className="text-base font-semibold text-foreground mb-0.5 line-clamp-1">
+              {item.title}
+            </h3>
+            {item.subtitle && (
+              <p className="text-xs text-muted-foreground mb-1 tracking-wide">
+                {item.subtitle}
+              </p>
+            )}
+            <p className="text-xs text-muted-foreground mb-3 line-clamp-2 flex-1">
                         {item.description?.substring(0, 100) || 'No description'}...
                       </p>
 <div className="flex justify-between items-center mt-auto">

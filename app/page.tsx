@@ -9,6 +9,7 @@ import { useRouter } from 'next/navigation'
 interface Item {
   id: string
   title: string
+  subtitle?: string       // ← ADD THIS LINE
   description: string
   image_url: string
   images?: string[]
@@ -300,7 +301,12 @@ if (isLoading || items.length === 0) {
 </div>
 <div className="p-2 sm:p-4 flex-1 flex flex-col">
 
-  <h3 className="text-xs sm:text-base font-semibold text-foreground mb-1 line-clamp-1">{item.title}</h3>
+  <h3 className="text-xs sm:text-base font-semibold text-foreground mb-0.5 line-clamp-1">{item.title}</h3>
+    {item.subtitle && (
+      <p className="text-xs text-muted-foreground mb-1 tracking-wide line-clamp-1">
+        {item.subtitle}
+      </p>
+    )}
 
 <div className="flex justify-between items-center mt-auto">
   <div>

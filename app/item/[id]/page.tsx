@@ -9,6 +9,7 @@ import BidSliderInput from '@/app/components/BidSliderInput'
 interface Item {
   id: string
   title: string
+  subtitle?: string   
   description: string
   price: number
   type: 'fixed' | 'auction'
@@ -264,7 +265,7 @@ if (loading) {
                     src={allImages[currentImageIndex]}
                     alt={`${item.title} - image ${currentImageIndex + 1}`}
                     fill
-                    className="object-contain p-2"
+                    className="object-cover"
                     sizes="(max-width: 768px) 100vw, 50vw"
                     priority={currentImageIndex === 0}
                     loading={currentImageIndex === 0 ? "eager" : "lazy"}
@@ -326,8 +327,13 @@ if (loading) {
               <span className="inline-block bg-primary text-primary-foreground px-3 py-1 rounded text-sm font-semibold mb-4">
                 {isAuction ? 'AUCTION' : 'FIXED PRICE'}
               </span>
-              <h1 className="text-4xl font-bold text-foreground mb-4">{item.title}</h1>
-              <div className="text-lg text-muted-foreground mb-6">
+              <h1 className="text-4xl font-bold text-foreground mb-1">{item.title}</h1>
+            {item.subtitle && (
+              <p className="text-sm text-muted-foreground mb-4 tracking-widest uppercase">
+                {item.subtitle}
+              </p>
+            )}
+                          <div className="text-lg text-muted-foreground mb-6">
   {formatDescription(item.description)}
 </div>
 
