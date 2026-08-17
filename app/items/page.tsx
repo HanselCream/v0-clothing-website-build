@@ -120,13 +120,13 @@ if (loading) {
 )}
 
                     {/* IMAGE — matches homepage: aspectRatio 1/1, plain <img>, same classes */}
-                    <div className="w-full bg-secondary overflow-hidden relative" style={{ aspectRatio: '1/1' }}>
-                      {thumbnail ? (
-                        <img
-                          src={thumbnail}
-                          alt={item.title}
-                          className={`w-full h-full object-cover transition-transform duration-300 group-hover:scale-105 ${isSold ? 'opacity-50' : ''}`}
-                        />
+          <div className="w-full bg-black overflow-hidden relative" style={{ aspectRatio: '1/1' }}>
+            {thumbnail ? (
+              <img
+                src={thumbnail}
+                alt={item.title}
+                className={`w-full h-full object-contain transition-transform duration-300 group-hover:scale-105 ${isSold ? 'opacity-50' : ''}`}
+              />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center text-muted-foreground">
                           No image
